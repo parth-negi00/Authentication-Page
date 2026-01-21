@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import "./Signup.css";
 
+// Set backend URL here
+const BACKEND_URL = "https://authentication-page-backend.vercel.app";
+
 export default function Signup() {
   const [signupForm, setSignupForm] = useState({ name: "", email: "", password: "" });
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
@@ -20,7 +23,7 @@ export default function Signup() {
   const handleSignupSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("http://localhost:5000/api/auth/signup", {
+      const res = await fetch(`${BACKEND_URL}/api/auth/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(signupForm),
@@ -41,7 +44,7 @@ export default function Signup() {
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("http://localhost:5000/api/auth/login", {
+      const res = await fetch(`${BACKEND_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(loginForm),
