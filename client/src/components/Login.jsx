@@ -14,8 +14,10 @@ export default function Login() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
+
       const data = await res.json();
-      if (res.status === 200) {
+
+      if (res.ok) {
         localStorage.setItem("token", data.token);
         setMessage(`Welcome back, ${data.user.name}!`);
       } else {
@@ -27,8 +29,8 @@ export default function Login() {
   };
 
   return (
-    <div>
-      {/* <h2>Login</h2>
+    <div style={{ maxWidth: 400, margin: "50px auto" }}>
+      <h2>Login</h2>
       <form onSubmit={handleLogin}>
         <input
           type="email"
@@ -36,16 +38,18 @@ export default function Login() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-        /><br/>
+        />
+        <br />
         <input
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-        /><br/>
+        />
+        <br />
         <button type="submit">Login</button>
-      </form> */}
+      </form>
       {message && <p>{message}</p>}
     </div>
   );
