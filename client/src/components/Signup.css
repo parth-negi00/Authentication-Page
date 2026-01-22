@@ -164,3 +164,27 @@
   color: #f5f5f5;
 }
 
+
+/* Switch link */
+.switch-link {
+  text-align: center;
+  margin-top: 15px;
+  font-weight: 500;
+  color: #ffd700;
+}
+
+.switch-link .link {
+  cursor: pointer;
+  font-weight: bold;
+  text-decoration: underline;
+  color: #ffcc00;
+}
+
+.signup-container.dark .switch-link {
+  color: #aaa;
+}
+
+.signup-container.dark .switch-link .link {
+  color: #fff;
+}
+

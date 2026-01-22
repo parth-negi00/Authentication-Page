@@ -3,19 +3,18 @@ import "./Signup.css";
 
 const BACKEND_URL = "https://authentication-page-backend.vercel.app";
 
-export default function Signup() {
-  const [signupForm, setSignupForm] = useState({ name: "", email: "", password: "" });
-  const [loginForm, setLoginForm] = useState({ email: "", password: "" });
+export default function AuthForm() {
+  const [isSignup, setIsSignup] = useState(true); // true = signup, false = login
+  const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [message, setMessage] = useState("");
   const [darkMode, setDarkMode] = useState(false);
 
-  // Persist mode on refresh
+  // Persist dark mode
   useEffect(() => {
     const savedMode = localStorage.getItem("darkMode") === "true";
     setDarkMode(savedMode);
   }, []);
 
-  // Toggle mode handler
   const toggleDarkMode = () => {
     setDarkMode((prev) => {
       localStorage.setItem("darkMode", !prev);
@@ -23,75 +22,90 @@ export default function Signup() {
     });
   };
 
-  // Form change handlers
-  const handleSignupChange = (e) => setSignupForm({ ...signupForm, [e.target.name]: e.target.value });
-  const handleLoginChange = (e) => setLoginForm({ ...loginForm, [e.target.name]: e.target.value });
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
-  // Signup submit
-  const handleSignupSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    const endpoint = isSignup ? "signup" : "login";
+
     try {
-      const res = await fetch(`${BACKEND_URL}/api/auth/signup`, {
+      const res = await fetch(`${BACKEND_URL}/api/auth/${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(signupForm),
+        body: JSON.stringify(form),
       });
       const data = await res.json();
       if (res.ok) {
         localStorage.setItem("token", data.token);
-        setMessage("✅ Signup successful! Welcome " + data.user.name);
+        setMessage(
+          isSignup
+            ? "Signup successful! Welcome " + data.user.name
+            : "Login successful! Welcome back " + data.user.name
+        );
       } else {
-        setMessage("⚠️ " + (data.message || "Signup failed"));
+        setMessage(data.message || "Error occurred");
       }
     } catch (err) {
-      setMessage("🔥 Server error, try again later");
-    }
-  };
-
-  // Login submit
-  const handleLoginSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await fetch(`${BACKEND_URL}/api/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(loginForm),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        localStorage.setItem("token", data.token);
-        setMessage("✅ Login successful! Welcome back " + data.user.name);
-      } else {
-        setMessage("⚠️ " + (data.message || "Login failed"));
-      }
-    } catch (err) {
-      setMessage("🔥 Server error, try again later");
+      setMessage("Server error");
     }
   };
 
   return (
     <div className={`signup-container ${darkMode ? "dark" : "light"}`}>
-      {/* 🌗 Fixed Toggle Button */}
-      <div className="toggle-wrapper">
-        <button className="toggle-btn" onClick={toggleDarkMode}>
-          {darkMode ? "🌞 Light Mode" : "🌙 Dark Mode"}
-        </button>
-      </div>
+      {/* Toggle dark/light mode */}
+      <button className="toggle-btn" onClick={toggleDarkMode}>
+        {darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+      </button>
 
-      <h2>Signup</h2>
-      <form onSubmit={handleSignupSubmit}>
-        <input type="text" name="name" placeholder="Name" value={signupForm.name} onChange={handleSignupChange} required />
-        <input type="email" name="email" placeholder="Email" value={signupForm.email} onChange={handleSignupChange} required />
-        <input type="password" name="password" placeholder="Password" value={signupForm.password} onChange={handleSignupChange} required />
-        <button type="submit">Signup</button>
+      <h2>{isSignup ? "Signup" : "Login"}</h2>
+      <form onSubmit={handleSubmit}>
+        {isSignup && (
+          <input
+            type="text"
+            name="name"
+            placeholder="Name"
+            value={form.name}
+            onChange={handleChange}
+            required
+          />
+        )}
+        <input
+          type="email"
+          name="email"
+          placeholder="Email"
+          value={form.email}
+          onChange={handleChange}
+          required
+        />
+        <input
+          type="password"
+          name="password"
+          placeholder="Password"
+          value={form.password}
+          onChange={handleChange}
+          required
+        />
+        <button type="submit">{isSignup ? "Signup" : "Login"}</button>
       </form>
 
-      <h2 style={{ marginTop: "40px" }}>Login</h2>
-      <form onSubmit={handleLoginSubmit}>
-        <input type="email" name="email" placeholder="Email" value={loginForm.email} onChange={handleLoginChange} required />
-        <input type="password" name="password" placeholder="Password" value={loginForm.password} onChange={handleLoginChange} required />
-        <button type="submit">Login</button>
-      </form>
+      {/* Switch form link */}
+      <p className="switch-link">
+        {isSignup ? (
+          <>
+            Already have an account?{" "}
+            <span onClick={() => { setIsSignup(false); setMessage(""); setForm({ name: "", email: "", password: "" }) }} className="link">
+              Login
+            </span>
+          </>
+        ) : (
+          <>
+            Don't have an account?{" "}
+            <span onClick={() => { setIsSignup(true); setMessage(""); setForm({ name: "", email: "", password: "" }) }} className="link">
+              Signup
+            </span>
+          </>
+        )}
+      </p>
 
       {message && <p className="message">{message}</p>}
     </div>
