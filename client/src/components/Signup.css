@@ -26,8 +26,8 @@
   /* Border + glow effect */
   -webkit-text-stroke: 0.8px rgba(0, 0, 0, 0.6);
   text-shadow:
-    0 0 6px rgba(255, 255, 255, 0.4),
-    0 0 12px rgba(0, 0, 0, 0.4);
+    0 0 6px rgba(248, 248, 248, 0.73),
+    0 0 12px rgba(0, 0, 0, 0.24);
 
   letter-spacing: 1px;
 }
@@ -177,15 +177,12 @@
 .switch-link {
   text-align: center;
   margin-top: 18px;
-  font-weight: 500;
-  font-size: 15px;
+  font-weight: 400;
+  font-size: 20px;
   color: #ffffff;
 
   /* Border + glow for visibility */
   -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.6);
-  text-shadow:
-    0 0 5px rgba(0, 0, 0, 0.6),
-    0 0 10px rgba(255, 255, 255, 0.25);
 }
 
 .switch-link .link {
