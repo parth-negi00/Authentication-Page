@@ -1,8 +1,7 @@
-// server.js
 const express = require("express");
-const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const cors = require("cors");
+const connectDB = require("./db");
 const authRoutes = require("./routes/auth");
 
 dotenv.config();
@@ -16,12 +15,15 @@ app.use(cors());
 // Routes
 app.use("/api/auth", authRoutes);
 
-// MongoDB connection (important: no options needed in mongoose v9)
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB connected"))
-  .catch(err => console.error("MongoDB connection error:", err));
+// Connect DB
+connectDB();
 
+// Test route (important)
+app.get("/", (req, res) => {
+  res.send("Auth API running");
+});
 
-// ❌ REMOVE app.listen
-// ✅ EXPORT app for Vercel
-module.exports = app;
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
