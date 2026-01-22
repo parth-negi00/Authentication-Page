@@ -5,11 +5,11 @@
   padding: 40px 30px 30px 30px;
   border-radius: 16px;
   background: linear-gradient(135deg, #667eea, #764ba2);
-  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.2);
-  color: #fff;
+  box-shadow: 0 8px 19px rgba(0, 0, 0, 0.2);
+  color: #ffb0b0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   position: relative; /* for toggle button positioning */
-  transition: all 0.3s ease, background 0.3s ease;
+  transition: all 0.3s ease, background 0.1s ease;
 }
 
 .signup-container:hover {
@@ -36,18 +36,18 @@
   border-radius: 8px;
   border: none;
   font-size: 16px;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .signup-container input[type="text"],
 .signup-container input[type="email"],
 .signup-container input[type="password"] {
   background-color: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  color: #e7c1c1;
 }
 
 .signup-container input::placeholder {
-  color: #ddd;
+  color: #dfbbbb;
 }
 
 .signup-container input:focus {
@@ -62,7 +62,7 @@
   border-radius: 8px;
   border: none;
   background: linear-gradient(135deg, #f093fb, #f5576c);
-  color: #fff;
+  color: #facccc;
   font-weight: bold;
   cursor: pointer;
   font-size: 16px;
@@ -148,20 +148,20 @@
   font-weight: bold;
   cursor: pointer;
   border: none;
-  background-color: #ffcc00;
+  background-color: #ffde59;
   color: #111;
   box-shadow: 0 2px 6px rgba(0,0,0,0.2);
   transition: all 0.3s ease;
 }
 
 .toggle-btn:hover {
-  background-color: #ffd633;
+  background-color: #ffde59;
 }
 
 /* Dark mode for toggle button */
 .signup-container.dark .toggle-btn {
-  background-color: #555;
-  color: #f5f5f5;
+  background-color: #333232;
+  color: #42e700;
 }
 
 
@@ -170,14 +170,14 @@
   text-align: center;
   margin-top: 15px;
   font-weight: 500;
-  color: #ffd700;
+  color: #ffde59;
 }
 
 .switch-link .link {
   cursor: pointer;
   font-weight: bold;
   text-decoration: underline;
-  color: #ffcc00;
+  color: #ffde59;
 }
 
 .signup-container.dark .switch-link {
@@ -230,10 +230,10 @@
 .auth-page.light .animated-bg {
   background: linear-gradient(
     120deg,
-    #fdfbfb,
-    #ebedee,
-    #dfe9f3,
-    #ffffff
+    #f3a5a5,
+    #faa5a5,
+    #faa5a5,
+    #faa5a5
   );
 }
 
