@@ -1,14 +1,17 @@
-import './App.css';
-import Signup from './components/Signup';
-// import Login from "./components/Login";  <-- remove this import
+import "./App.css";
+import { Routes, Route } from "react-router-dom";
+import Signup from "./components/Signup";
+import Home from "./components/Home"; // we’ll create this next
 
 function App() {
   return (
-    <div>
-      <h1 style={{ textAlign: "center" }}>MERN Auth Example</h1>
-      <Signup />
-      {/* <Login /> <-- remove this */}
-    </div>
+    <Routes>
+      {/* Auth page */}
+      <Route path="/" element={<Signup />} />
+
+      {/* Home page after login */}
+      <Route path="/home" element={<Home />} />
+    </Routes>
   );
 }
 
