@@ -19,11 +19,19 @@
 .signup-container h2 {
   text-align: center;
   margin-bottom: 20px;
-  font-size: 28px;
-  font-weight: 600;
-  color: #fff;
-  text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+  font-size: 30px;
+  font-weight: 700;
+  color: #ffffff;
+
+  /* Border + glow effect */
+  -webkit-text-stroke: 0.8px rgba(0, 0, 0, 0.6);
+  text-shadow:
+    0 0 6px rgba(255, 255, 255, 0.4),
+    0 0 12px rgba(0, 0, 0, 0.4);
+
+  letter-spacing: 1px;
 }
+
 
 .signup-container form {
   display: flex;
@@ -168,9 +176,16 @@
 /* Switch link */
 .switch-link {
   text-align: center;
-  margin-top: 15px;
+  margin-top: 18px;
   font-weight: 500;
-  color: #ffd700;
+  font-size: 15px;
+  color: #ffffff;
+
+  /* Border + glow for visibility */
+  -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.6);
+  text-shadow:
+    0 0 5px rgba(0, 0, 0, 0.6),
+    0 0 10px rgba(255, 255, 255, 0.25);
 }
 
 .switch-link .link {
