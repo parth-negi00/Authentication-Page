@@ -22,7 +22,8 @@ export default function AuthForm() {
     });
   };
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,80 +35,101 @@ export default function AuthForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
+
       const data = await res.json();
+
       if (res.ok) {
         localStorage.setItem("token", data.token);
         setMessage(
           isSignup
-            ? "Signup successful! Welcome " + data.user.name
-            : "Login successful! Welcome back " + data.user.name
+            ? `Signup successful! Welcome ${data.user.name}`
+            : `Login successful! Welcome back ${data.user.name}`
         );
       } else {
-        setMessage(data.message || "Error occurred");
+        setMessage(data.message || "Something went wrong");
       }
-    } catch (err) {
-      setMessage("Server error");
+    } catch (error) {
+      setMessage("Server error. Please try again later.");
     }
   };
 
-  return (
-    <div className={`signup-container ${darkMode ? "dark" : "light"}`}>
-      {/* Toggle dark/light mode */}
-      <button className="toggle-btn" onClick={toggleDarkMode}>
-        {darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-      </button>
+  const switchMode = (signupMode) => {
+    setIsSignup(signupMode);
+    setMessage("");
+    setForm({ name: "", email: "", password: "" });
+  };
 
-      <h2>{isSignup ? "Signup" : "Login"}</h2>
-      <form onSubmit={handleSubmit}>
-        {isSignup && (
+  return (
+    <div className={`auth-page ${darkMode ? "dark" : "light"}`}>
+      {/* Animated Background */}
+      <div className="animated-bg" />
+
+      {/* Auth Card */}
+      <div className={`signup-container ${darkMode ? "dark" : "light"}`}>
+        {/* Dark / Light Toggle */}
+        <button className="toggle-btn" onClick={toggleDarkMode}>
+          {darkMode ? "Light Mode" : "Dark Mode"}
+        </button>
+
+        <h2>{isSignup ? "Signup" : "Login"}</h2>
+
+        <form onSubmit={handleSubmit}>
+          {isSignup && (
+            <input
+              type="text"
+              name="name"
+              placeholder="Name"
+              value={form.name}
+              onChange={handleChange}
+              required
+            />
+          )}
+
           <input
-            type="text"
-            name="name"
-            placeholder="Name"
-            value={form.name}
+            type="email"
+            name="email"
+            placeholder="Email"
+            value={form.email}
             onChange={handleChange}
             required
           />
-        )}
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={handleChange}
-          required
-        />
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={form.password}
-          onChange={handleChange}
-          required
-        />
-        <button type="submit">{isSignup ? "Signup" : "Login"}</button>
-      </form>
 
-      {/* Switch form link */}
-      <p className="switch-link">
-        {isSignup ? (
-          <>
-            Already have an account?{" "}
-            <span onClick={() => { setIsSignup(false); setMessage(""); setForm({ name: "", email: "", password: "" }) }} className="link">
-              Login
-            </span>
-          </>
-        ) : (
-          <>
-            Don't have an account?{" "}
-            <span onClick={() => { setIsSignup(true); setMessage(""); setForm({ name: "", email: "", password: "" }) }} className="link">
-              Signup
-            </span>
-          </>
-        )}
-      </p>
+          <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            value={form.password}
+            onChange={handleChange}
+            required
+          />
 
-      {message && <p className="message">{message}</p>}
+          <button type="submit">
+            {isSignup ? "Create Account" : "Login"}
+          </button>
+        </form>
+
+        {/* Switch Signup/Login */}
+        <p className="switch-link">
+          {isSignup ? (
+            <>
+              Already have an account?{" "}
+              <span className="link" onClick={() => switchMode(false)}>
+                Login
+              </span>
+            </>
+          ) : (
+            <>
+              Don&apos;t have an account?{" "}
+              <span className="link" onClick={() => switchMode(true)}>
+                Signup
+              </span>
+            </>
+          )}
+        </p>
+
+        {/* Message */}
+        {message && <p className="message">{message}</p>}
+      </div>
     </div>
   );
 }
