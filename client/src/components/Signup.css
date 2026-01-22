@@ -185,8 +185,7 @@
 .switch-link .link {
   cursor: pointer;
   font-weight: bold;
-  text-decoration: underline;
-  color: #ffcc00;
+  color: #000000;
 }
 
 .signup-container.dark .switch-link {
