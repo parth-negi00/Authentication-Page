@@ -5,8 +5,8 @@
   padding: 40px 30px 30px 30px;
   border-radius: 16px;
   background: linear-gradient(135deg, #667eea, #764ba2);
-  box-shadow: 0 8px 19px rgba(0, 0, 0, 0.2);
-  color: #ffb0b0;
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.2);
+  color: #fff;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   position: relative; /* for toggle button positioning */
   transition: all 0.3s ease, background 0.3s ease;
@@ -36,18 +36,18 @@
   border-radius: 8px;
   border: none;
   font-size: 16px;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
 }
 
 .signup-container input[type="text"],
 .signup-container input[type="email"],
 .signup-container input[type="password"] {
   background-color: rgba(255, 255, 255, 0.1);
-  color: #e7c1c1;
+  color: #fff;
 }
 
 .signup-container input::placeholder {
-  color: #dfbbbb;
+  color: #ddd;
 }
 
 .signup-container input:focus {
@@ -62,7 +62,7 @@
   border-radius: 8px;
   border: none;
   background: linear-gradient(135deg, #f093fb, #f5576c);
-  color: #facccc;
+  color: #fff;
   font-weight: bold;
   cursor: pointer;
   font-size: 16px;
@@ -148,20 +148,20 @@
   font-weight: bold;
   cursor: pointer;
   border: none;
-  background-color: #ffde59;
+  background-color: #ffcc00;
   color: #111;
   box-shadow: 0 2px 6px rgba(0,0,0,0.2);
   transition: all 0.3s ease;
 }
 
 .toggle-btn:hover {
-  background-color: #ffde59;
+  background-color: #ffd633;
 }
 
 /* Dark mode for toggle button */
 .signup-container.dark .toggle-btn {
-  background-color: #333232;
-  color: #42e700;
+  background-color: #555;
+  color: #f5f5f5;
 }
 
 
@@ -170,14 +170,14 @@
   text-align: center;
   margin-top: 15px;
   font-weight: 500;
-  color: #ffde59;
+  color: #ffd700;
 }
 
 .switch-link .link {
   cursor: pointer;
   font-weight: bold;
   text-decoration: underline;
-  color: #ffde59;
+  color: #ffcc00;
 }
 
 .signup-container.dark .switch-link {
@@ -186,75 +186,4 @@
 
 .signup-container.dark .switch-link .link {
   color: #fff;
-}
-/* ===== Full Page Wrapper ===== */
-.auth-page {
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
-  position: relative;
-}
-
-/* ===== Animated Gradient Background ===== */
-.animated-bg {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    120deg,
-    #667eea,
-    #764ba2,
-    #f093fb,
-    #f5576c
-  );
-  background-size: 300% 300%;
-  animation: gradientMove 12s ease infinite;
-  filter: blur(40px);
-  opacity: 0.85;
-  z-index: 0;
-}
-
-/* Dark mode background */
-.auth-page.dark .animated-bg {
-  background: linear-gradient(
-    120deg,
-    #0f2027,
-    #203a43,
-    #2c5364,
-    #1c1c1c
-  );
-}
-
-/* Light mode background */
-.auth-page.light .animated-bg {
-  background: linear-gradient(
-    120deg,
-    #f3a5a5,
-    #faa5a5,
-    #faa5a5,
-    #faa5a5
-  );
-}
-
-/* Animation */
-@keyframes gradientMove {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-/* ===== Glass Effect Upgrade ===== */
-.signup-container {
-  z-index: 1;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-}
-
-/* Dark glass */
-.signup-container.dark {
-  background: rgba(20, 20, 20, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.08);
 }
