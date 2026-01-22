@@ -1,54 +1,49 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import "./Signup.css";
 
-export default function Signup() {
-  const navigate = useNavigate();
+const BACKEND_URL = "https://authentication-page-backend.vercel.app";
 
-  const [isSignup, setIsSignup] = useState(true);
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-  });
+export default function AuthForm() {
+  const [isSignup, setIsSignup] = useState(true); // true = signup, false = login
+  const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [message, setMessage] = useState("");
+  const [darkMode, setDarkMode] = useState(false);
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  // Persist dark mode
+  useEffect(() => {
+    const savedMode = localStorage.getItem("darkMode") === "true";
+    setDarkMode(savedMode);
+  }, []);
+
+  const toggleDarkMode = () => {
+    setDarkMode((prev) => {
+      localStorage.setItem("darkMode", !prev);
+      return !prev;
+    });
   };
+
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const url = isSignup
-      ? "https://YOUR_BACKEND_URL/api/auth/signup"
-      : "https://YOUR_BACKEND_URL/api/auth/login";
+    const endpoint = isSignup ? "signup" : "login";
 
     try {
-      const res = await fetch(url, {
+      const res = await fetch(`${BACKEND_URL}/api/auth/${endpoint}`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-
       const data = await res.json();
-
-      if (!res.ok) {
-        setMessage(data.message || "Something went wrong");
-        return;
-      }
-
-      // ✅ SUCCESS
-      localStorage.setItem("token", data.token);
-
-      if (isSignup) {
-        setMessage("Signup successful! Please login.");
-        setIsSignup(false);
-        setForm({ name: "", email: "", password: "" });
+      if (res.ok) {
+        localStorage.setItem("token", data.token);
+        setMessage(
+          isSignup
+            ? "Signup successful! Welcome " + data.user.name
+            : "Login successful! Welcome back " + data.user.name
+        );
       } else {
-        // ✅ LOGIN SUCCESS → REDIRECT
-        navigate("/home");
+        setMessage(data.message || "Error occurred");
       }
     } catch (err) {
       setMessage("Server error");
@@ -56,9 +51,13 @@ export default function Signup() {
   };
 
   return (
-    <div style={{ maxWidth: "400px", margin: "auto" }}>
-      <h2>{isSignup ? "Signup" : "Login"}</h2>
+    <div className={`signup-container ${darkMode ? "dark" : "light"}`}>
+      {/* Toggle dark/light mode */}
+      <button className="toggle-btn" onClick={toggleDarkMode}>
+        {darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+      </button>
 
+      <h2>{isSignup ? "Signup" : "Login"}</h2>
       <form onSubmit={handleSubmit}>
         {isSignup && (
           <input
@@ -70,7 +69,6 @@ export default function Signup() {
             required
           />
         )}
-
         <input
           type="email"
           name="email"
@@ -79,7 +77,6 @@ export default function Signup() {
           onChange={handleChange}
           required
         />
-
         <input
           type="password"
           name="password"
@@ -88,17 +85,29 @@ export default function Signup() {
           onChange={handleChange}
           required
         />
-
-        <button type="submit">
-          {isSignup ? "Signup" : "Login"}
-        </button>
+        <button type="submit">{isSignup ? "Signup" : "Login"}</button>
       </form>
 
-      <p style={{ color: "green" }}>{message}</p>
+      {/* Switch form link */}
+      <p className="switch-link">
+        {isSignup ? (
+          <>
+            Already have an account?{" "}
+            <span onClick={() => { setIsSignup(false); setMessage(""); setForm({ name: "", email: "", password: "" }) }} className="link">
+              Login
+            </span>
+          </>
+        ) : (
+          <>
+            Don't have an account?{" "}
+            <span onClick={() => { setIsSignup(true); setMessage(""); setForm({ name: "", email: "", password: "" }) }} className="link">
+              Signup
+            </span>
+          </>
+        )}
+      </p>
 
-      <button onClick={() => setIsSignup(!isSignup)}>
-        {isSignup ? "Already have an account? Login" : "New user? Signup"}
-      </button>
+      {message && <p className="message">{message}</p>}
     </div>
   );
 }
