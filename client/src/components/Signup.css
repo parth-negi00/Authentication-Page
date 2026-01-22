@@ -26,7 +26,7 @@
   /* Border + glow effect */
   -webkit-text-stroke: 0.8px rgba(0, 0, 0, 0.6);
   text-shadow:
-    0 0 96px rgb(255, 255, 255),
+    25px 25px 25px rgb(255, 255, 255),
     0 0 12px rgba(27, 27, 27, 0.24);
 
   letter-spacing: 1px;
