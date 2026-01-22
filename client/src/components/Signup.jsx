@@ -7,7 +7,7 @@ export default function Signup() {
   const [signupForm, setSignupForm] = useState({ name: "", email: "", password: "" });
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [message, setMessage] = useState("");
-  const [darkMode, setDarkMode] = useState(false); // 🌑 dark mode state
+  const [darkMode, setDarkMode] = useState(false);
 
   // Persist mode on refresh
   useEffect(() => {
@@ -23,10 +23,11 @@ export default function Signup() {
     });
   };
 
-  // Signup form change
+  // Form change handlers
   const handleSignupChange = (e) => setSignupForm({ ...signupForm, [e.target.name]: e.target.value });
   const handleLoginChange = (e) => setLoginForm({ ...loginForm, [e.target.name]: e.target.value });
 
+  // Signup submit
   const handleSignupSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -38,15 +39,16 @@ export default function Signup() {
       const data = await res.json();
       if (res.ok) {
         localStorage.setItem("token", data.token);
-        setMessage("Signup successful! Welcome " + data.user.name);
+        setMessage("✅ Signup successful! Welcome " + data.user.name);
       } else {
-        setMessage(data.message);
+        setMessage("⚠️ " + (data.message || "Signup failed"));
       }
     } catch (err) {
-      setMessage("Server error");
+      setMessage("🔥 Server error, try again later");
     }
   };
 
+  // Login submit
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -58,21 +60,23 @@ export default function Signup() {
       const data = await res.json();
       if (res.ok) {
         localStorage.setItem("token", data.token);
-        setMessage("Login successful! Welcome back " + data.user.name);
+        setMessage("✅ Login successful! Welcome back " + data.user.name);
       } else {
-        setMessage(data.message);
+        setMessage("⚠️ " + (data.message || "Login failed"));
       }
     } catch (err) {
-      setMessage("Server error");
+      setMessage("🔥 Server error, try again later");
     }
   };
 
   return (
     <div className={`signup-container ${darkMode ? "dark" : "light"}`}>
-      {/* 🌗 Toggle Button */}
-      <button className="toggle-btn" onClick={toggleDarkMode}>
-        {darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-      </button>
+      {/* 🌗 Fixed Toggle Button */}
+      <div className="toggle-wrapper">
+        <button className="toggle-btn" onClick={toggleDarkMode}>
+          {darkMode ? "🌞 Light Mode" : "🌙 Dark Mode"}
+        </button>
+      </div>
 
       <h2>Signup</h2>
       <form onSubmit={handleSignupSubmit}>
@@ -89,7 +93,7 @@ export default function Signup() {
         <button type="submit">Login</button>
       </form>
 
-      {message && <p style={{ marginTop: "20px", color: "yellow" }}>{message}</p>}
+      {message && <p className="message">{message}</p>}
     </div>
   );
 }
