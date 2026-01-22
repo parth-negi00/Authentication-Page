@@ -17,42 +17,43 @@ export default function Signup() {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  const url = isSignup
-    ? `${process.env.REACT_APP_BACKEND_URL}/api/auth/signup`
-    : `${process.env.REACT_APP_BACKEND_URL}/api/auth/login`;
+    const url = isSignup
+      ? "https://YOUR_BACKEND_URL/api/auth/signup"
+      : "https://YOUR_BACKEND_URL/api/auth/login";
 
-  try {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(form),
-    });
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(form),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (!res.ok) {
-      setMessage(data.message || "Something went wrong");
-      return;
+      if (!res.ok) {
+        setMessage(data.message || "Something went wrong");
+        return;
+      }
+
+      // ✅ SUCCESS
+      localStorage.setItem("token", data.token);
+
+      if (isSignup) {
+        setMessage("Signup successful! Please login.");
+        setIsSignup(false);
+        setForm({ name: "", email: "", password: "" });
+      } else {
+        // ✅ LOGIN SUCCESS → REDIRECT
+        navigate("/home");
+      }
+    } catch (err) {
+      setMessage("Server error");
     }
-
-    localStorage.setItem("token", data.token);
-
-    if (isSignup) {
-      setMessage("Signup successful! Please login.");
-      setIsSignup(false);
-      setForm({ name: "", email: "", password: "" });
-    } else {
-      navigate("/home");
-    }
-  } catch (err) {
-    setMessage("Server error");
-  }
-};
-
+  };
 
   return (
     <div style={{ maxWidth: "400px", margin: "auto" }}>
