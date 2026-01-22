@@ -9,7 +9,7 @@
   color: #fff;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   position: relative; /* for toggle button positioning */
-  transition: all 0.3s ease, background 0.3s ease;
+  transition: all 0.1s ease, background 0.1s ease;
 }
 
 .signup-container:hover {
@@ -188,3 +188,25 @@
   color: #fff;
 }
 
+/* Switch link */
+.switch-link {
+  text-align: center;
+  margin-top: 15px;
+  font-weight: 500;
+  color: #ffd700;
+}
+
+.switch-link .link {
+  cursor: pointer;
+  font-weight: bold;
+  text-decoration: underline;
+  color: #ffcc00;
+}
+
+.signup-container.dark .switch-link {
+  color: #aaa;
+}
+
+.signup-container.dark .switch-link .link {
+  color: #fff;
+}
