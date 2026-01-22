@@ -1,38 +1,106 @@
-/* Signup.css - colorful modern version */
+/* ===== PAGE WRAPPER & BACKGROUND ===== */
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animated gradient background */
+.animated-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    #667eea,
+    #764ba2,
+    #f093fb,
+    #f5576c
+  );
+  background-size: 300% 300%;
+  animation: gradientMove 12s ease infinite;
+  filter: blur(40px);
+  opacity: 0.85;
+  z-index: 0;
+}
+
+.auth-page.dark .animated-bg {
+  background: linear-gradient(
+    120deg,
+    #0f2027,
+    #203a43,
+    #2c5364,
+    #1c1c1c
+  );
+}
+
+.auth-page.light .animated-bg {
+  background: linear-gradient(
+    120deg,
+    #fdfbfb,
+    #ebedee,
+    #dfe9f3,
+    #ffffff
+  );
+}
+
+@keyframes gradientMove {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ===== SIGNUP / LOGIN CARD ===== */
 .signup-container {
   max-width: 400px;
-  margin: 60px auto;
-  padding: 40px 30px 30px 30px;
+  width: 100%;
+  padding: 40px 30px 30px;
   border-radius: 16px;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.2);
   color: #fff;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  position: relative; /* for toggle button positioning */
-  transition: all 0.3s ease, background 0.3s ease;
+  position: relative;
+  z-index: 1;
+
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.25);
+  transition: transform 0.3s ease;
 }
 
 .signup-container:hover {
   transform: translateY(-5px);
 }
 
+/* ===== HEADING ===== */
 .signup-container h2 {
   text-align: center;
   margin-bottom: 20px;
   font-size: 30px;
   font-weight: 700;
-  color: #000000;
+  color: #ffffff;
 
-  /* Border + glow effect */
+  /* Border + glow (light / gradient mode) */
   -webkit-text-stroke: 0.8px rgba(0, 0, 0, 0.6);
   text-shadow:
-    0 0 26px rgb(255, 255, 255),
-    0 0 12px rgba(27, 27, 27, 0.24);
+    0 0 6px rgba(255, 255, 255, 0.4),
+    0 0 12px rgba(0, 0, 0, 0.4);
 
   letter-spacing: 1px;
 }
 
+/* Dark mode: clean white heading */
+.signup-container.dark h2 {
+  color: #ffffff;
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+}
 
+/* ===== FORM ===== */
 .signup-container form {
   display: flex;
   flex-direction: column;
@@ -50,7 +118,7 @@
 .signup-container input[type="text"],
 .signup-container input[type="email"],
 .signup-container input[type="password"] {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.15);
   color: #fff;
 }
 
@@ -59,106 +127,88 @@
 }
 
 .signup-container input:focus {
-  background-color: rgba(255, 255, 255, 0.25);
   outline: none;
-  box-shadow: 0 0 8px rgba(255,255,255,0.5);
+  background-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
 }
 
+/* ===== BUTTON ===== */
 .signup-container button {
   padding: 12px;
-  margin-top: 12px;
+  margin-top: 14px;
   border-radius: 8px;
   border: none;
   background: linear-gradient(135deg, #f093fb, #f5576c);
   color: #fff;
   font-weight: bold;
-  cursor: pointer;
   font-size: 16px;
+  cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .signup-container button:hover {
-  background: linear-gradient(135deg, #f5576c, #f093fb);
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  background: linear-gradient(135deg, #f5576c, #f093fb);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
 }
 
+/* ===== MESSAGE ===== */
 .signup-container p.message {
   text-align: center;
   margin-top: 15px;
   font-weight: 500;
   color: #ffe066;
-  text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
 }
 
-/* Light mode */
-.signup-container.light {
-  background: linear-gradient(135deg, #f5f5f5, #e0e0e0);
-  color: #e0d7d7;
-}
-
-.signup-container.light input[type="text"],
-.signup-container.light input[type="email"],
-.signup-container.light input[type="password"] {
-  background-color: rgba(255, 255, 255, 0.8);
-  color: #111;
-}
-
-.signup-container.light input::placeholder {
-  color: #555;
-}
-
-.signup-container.light button {
-  background: linear-gradient(135deg, #fdd835, #fbc02d);
-  color: #111;
-}
-
-.signup-container.light button:hover {
-  background: linear-gradient(135deg, #fbc02d, #fdd835);
-}
-
-/* Dark mode */
-.signup-container.dark {
-  background: linear-gradient(135deg, #111, #333);
+/* ===== SWITCH LINK ===== */
+.switch-link {
+  text-align: center;
+  margin-top: 18px;
+  font-size: 15px;
+  font-weight: 500;
   color: #ffffff;
+
+  -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.6);
+  text-shadow:
+    0 0 5px rgba(0, 0, 0, 0.6),
+    0 0 10px rgba(255, 255, 255, 0.25);
 }
 
-.signup-container.dark input[type="text"],
-.signup-container.dark input[type="email"],
-.signup-container.dark input[type="password"] {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: #f5f5f5;
+.switch-link .link {
+  cursor: pointer;
+  font-weight: 700;
+  margin-left: 4px;
+  color: #ffffff;
+
+  -webkit-text-stroke: 0.6px rgba(0, 0, 0, 0.8);
+  text-shadow:
+    0 0 6px rgba(255, 255, 255, 0.6),
+    0 0 12px rgba(0, 0, 0, 0.7);
+
+  transition: transform 0.2s ease, text-shadow 0.2s ease;
 }
 
-.signup-container.dark input::placeholder {
-  color: #ccc;
+.switch-link .link:hover {
+  transform: scale(1.08);
+  text-shadow:
+    0 0 10px rgba(255, 255, 255, 0.9),
+    0 0 18px rgba(0, 0, 0, 0.8);
 }
 
-.signup-container.dark button {
-  background: linear-gradient(135deg, #444, #666);
-  color: #f5f5f5;
-}
-
-.signup-container.dark button:hover {
-  background: linear-gradient(135deg, #666, #444);
-}
-
-/* Toggle Button - fixed at top right */
-.toggle-wrapper {
+/* ===== TOGGLE BUTTON ===== */
+.toggle-btn {
   position: absolute;
   top: 15px;
   right: 15px;
-}
-
-.toggle-btn {
   padding: 8px 16px;
   border-radius: 8px;
+  border: none;
   font-weight: bold;
   cursor: pointer;
-  border: none;
   background-color: #ffcc00;
   color: #111;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
   transition: all 0.3s ease;
 }
 
@@ -166,32 +216,13 @@
   background-color: #ffd633;
 }
 
-/* Dark mode for toggle button */
+/* Dark mode card */
+.signup-container.dark {
+  background: rgba(20, 20, 20, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
 .signup-container.dark .toggle-btn {
   background-color: #555;
   color: #f5f5f5;
-}
-
-
-/* Switch link */
-.switch-link {
-  text-align: center;
-  margin-top: 18px;
-  font-weight: 400;
-  font-size: 20px;
-  color: #020202;
-}
-
-.switch-link .link {
-  cursor: pointer;
-  font-weight: bold;
-  color: #000000;
-}
-
-.signup-container.dark .switch-link {
-  color: #aaa;
-}
-
-.signup-container.dark .switch-link .link {
-  color: #fff;
 }
