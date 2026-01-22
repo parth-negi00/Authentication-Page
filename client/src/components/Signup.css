@@ -94,7 +94,7 @@
 /* Light mode */
 .signup-container.light {
   background: linear-gradient(135deg, #f5f5f5, #e0e0e0);
-  color: #111;
+  color: #e0d7d7;
 }
 
 .signup-container.light input[type="text"],
