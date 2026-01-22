@@ -21,42 +21,24 @@ export default function Signup() {
 
   // Signup submit
   const handleSignupSubmit = async (e) => {
-  e.preventDefault();
-
-  // 🔍 DEBUG 1: confirm button click + data
-  console.log("Signup button clicked");
-  console.log("Signup form data:", signupForm);
-
-  try {
-    const res = await fetch(`${BACKEND_URL}/api/auth/signup`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(signupForm),
-    });
-
-    // 🔍 DEBUG 2: raw response
-    console.log("Signup raw response:", res);
-
-    const data = await res.json();
-
-    // 🔍 DEBUG 3: parsed response
-    console.log("Signup response data:", data);
-
-    if (res.ok) {
-      console.log("Signup SUCCESS, token:", data.token);
-      localStorage.setItem("token", data.token);
-      setMessage("Signup successful! Welcome " + data.user.name);
-    } else {
-      console.log("Signup FAILED:", data.message);
-      setMessage(data.message || "Signup failed");
+    e.preventDefault();
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/auth/signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(signupForm),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        localStorage.setItem("token", data.token);
+        setMessage("Signup successful! Welcome " + data.user.name);
+      } else {
+        setMessage(data.message);
+      }
+    } catch (err) {
+      setMessage("Server error");
     }
-  } catch (err) {
-    // 🔥 DEBUG 4: network / fetch error
-    console.error("Signup FETCH ERROR:", err);
-    setMessage("Server error");
-  }
-};
-
+  };
 
   // Login submit
   const handleLoginSubmit = async (e) => {
