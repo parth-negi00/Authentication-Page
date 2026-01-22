@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./Signup.css";
 
-const BACKEND_URL = "https://authentication-page-backend.vercel.app";
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 export default function AuthForm() {
   const [isSignup, setIsSignup] = useState(true); // true = signup, false = login
