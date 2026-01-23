@@ -1,109 +1,71 @@
 /* ===== PAGE WRAPPER & BACKGROUND ===== */
 .auth-page {
-  min-height: 100vh;
+  min-height: 90vh;
   display: flex;
   justify-content: center;
   align-items: center;
   position: relative;
   overflow: hidden;
+  transition: background 0.5s ease;
 }
 
-/* Animated gradient background */
-.animated-bg {
+/* Light mode background */
+.auth-page.light {
+  background-color: #af69d5;
+}
+
+/* Dark mode background with soft glow */
+.auth-page.dark {
+  background-color: #0a0a0a;
+}
+
+.auth-page.dark::before {
+  content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    120deg,
-    #667eea,
-    #764ba2,
-    #f093fb,
-    #f5576c
-  );
-  background-size: 300% 300%;
-  animation: gradientMove 12s ease infinite;
-  filter: blur(40px);
-  opacity: 0.85;
+  background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.05), transparent 70%),
+              radial-gradient(circle at bottom right, rgba(255, 255, 255, 0.05), transparent 70%);
+  filter: blur(60px);
   z-index: 0;
+  pointer-events: none;
+  animation: glowMove 15s ease infinite;
 }
 
-/* Light mode background (violet tone) */
-.auth-page.light .animated-bg {
-  background: linear-gradient(
-    120deg,
-    #7b4ae6,
-    #7b4ae6,
-    #7b4ae6,
-    #7b4ae6
-  );
-}
-
-/* Dark mode background */
-.auth-page.dark .animated-bg {
-  background: linear-gradient(
-    120deg,
-    #000000f6,
-    #000000f6,
-    #000000f6,
-    #000000f6
-  );
-}
-
-@keyframes gradientMove {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+@keyframes glowMove {
+  0% { transform: scale(1) translate(0, 0); }
+  50% { transform: scale(1.05) translate(5px, -5px); }
+  100% { transform: scale(1) translate(0, 0); }
 }
 
 /* ===== SIGNUP / LOGIN CARD ===== */
 .signup-container {
-  max-width: 400px;
-  width: 100%;
-  padding: 40px 30px 30px;
+  max-width: 600px;
+  margin: 60px auto;
+  padding: 40px 30px 30px 30px;
   border-radius: 16px;
-  position: relative;
-  z-index: 1;
-
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.2);
+  color: #ffffff;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: #fff;
-
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-
-  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.25);
-  transition: transform 0.3s ease;
+  position: relative;
+  transition: all 0.3s ease, background 0.3s ease;
 }
 
 .signup-container:hover {
   transform: translateY(-5px);
 }
 
-/* ===== HEADING (EXACT STYLE YOU LIKED) ===== */
 .signup-container h2 {
   text-align: center;
   margin-bottom: 20px;
   font-size: 30px;
   font-weight: 700;
-  color: #ffffff;
-
-  /* Border + glow effect */
+  color: #000000;
   -webkit-text-stroke: 0.8px rgba(0, 0, 0, 0.6);
-  text-shadow:
-    0 0 6px rgba(17, 2, 2, 0.82),
-    0 0 12px rgba(0, 0, 0, 0.4);
-
+  text-shadow: 0 0 25px #ffffff;
   letter-spacing: 1px;
 }
 
-/* Dark mode: plain white heading (NO border / glow) */
-.signup-container.dark h2 {
-  -webkit-text-stroke: 0;
-  text-shadow: none;
-  color: #ffffff;
-}
-
-/* ===== FORM ===== */
 .signup-container form {
   display: flex;
   flex-direction: column;
@@ -121,8 +83,8 @@
 .signup-container input[type="text"],
 .signup-container input[type="email"],
 .signup-container input[type="password"] {
-  background-color: rgba(255, 255, 255, 0.15);
-  color: #fff;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #000000;
 }
 
 .signup-container input::placeholder {
@@ -130,111 +92,130 @@
 }
 
 .signup-container input:focus {
+  background-color: rgba(255, 255, 255, 0.67);
   outline: none;
-  background-color: rgba(255, 255, 255, 0.3);
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+  box-shadow: 0 0 8px rgba(255,255,255,0.5);
 }
 
-/* ===== BUTTON ===== */
 .signup-container button {
   padding: 12px;
-  margin-top: 14px;
+  margin-top: 12px;
   border-radius: 8px;
   border: none;
   background: linear-gradient(135deg, #f093fb, #f5576c);
   color: #fff;
   font-weight: bold;
-  font-size: 16px;
   cursor: pointer;
+  font-size: 16px;
   transition: all 0.3s ease;
 }
 
 .signup-container button:hover {
-  transform: translateY(-2px);
   background: linear-gradient(135deg, #f5576c, #f093fb);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }
 
-/* ===== MESSAGE ===== */
 .signup-container p.message {
-  text-align: center;
-  margin-top: 15px;
-  font-weight: 500;
-  color: #000000;
-}
-
-/* ===== SWITCH LINK (EXACT STYLE YOU LIKED) ===== */
-.switch-link {
   text-align: center;
   margin-top: 18px;
   font-weight: 500;
-  font-size: 20px;
   color: #000000;
-
-  /* Border + glow for visibility */
-  text-shadow:
-    0 0 5px rgba(0, 0, 0, 0.6),
-    0 0 10px rgb(255, 255, 255);
+  text-shadow: 2px 2px 5px rgb(255, 255, 255);
 }
 
-/* Clickable Login / Signup */
-.switch-link .link {
-  cursor: pointer;
-  font-weight: 700;
-  margin-left: 4px;
-  color: #000000;
-
-  /* Stronger border + glow */
-  -webkit-text-stroke: 0.6px rgba(0, 0, 0, 0.8);
-  text-shadow:
-    0 0 6px rgba(255, 255, 255, 0.6),
-    0 0 12px rgba(0, 0, 0, 0.7);
-
-  transition: transform 0.2s ease, text-shadow 0.2s ease;
+/* Light mode */
+.signup-container.light {
+  background: linear-gradient(346deg, #6c2dbf, #d5b8b8);
 }
 
-.switch-link .link:hover {
-  transform: scale(1.08);
-  text-shadow:
-    0 0 10px rgba(255, 255, 255, 0.9),
-    0 0 18px rgba(0, 0, 0, 0.8);
+.signup-container.light input[type="text"],
+.signup-container.light input[type="email"],
+.signup-container.light input[type="password"] {
+  background-color: rgba(255, 255, 255, 0.8);
+  color: #111;
 }
 
-/* ===== TOGGLE BUTTON ===== */
+.signup-container.light input::placeholder {
+  color: #555;
+}
+
+.signup-container.light button {
+  background: linear-gradient(135deg, #fdd835, #fbc02d);
+  color: #111;
+}
+
+.signup-container.light button:hover {
+  background: linear-gradient(135deg, #fbc02d, #fdd835);
+}
+
+/* Dark mode */
+.signup-container.dark {
+  background: linear-gradient(135deg, #111, #333);
+  color: #ffffff;
+}
+
+.signup-container.dark input[type="text"],
+.signup-container.dark input[type="email"],
+.signup-container.dark input[type="password"] {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #f5f5f5;
+}
+
+.signup-container.dark input::placeholder {
+  color: #ccc;
+}
+
+.signup-container.dark button {
+  background: linear-gradient(135deg, #444, #666);
+  color: #f5f5f5;
+}
+
+.signup-container.dark button:hover {
+  background: linear-gradient(135deg, #666, #444);
+}
+
+/* Toggle Button */
 .toggle-btn {
-  position: absolute;
-  top: 15px;
-  right: 15px;
   padding: 8px 16px;
   border-radius: 8px;
-  border: none;
   font-weight: bold;
   cursor: pointer;
+  border: none;
   background-color: #ffcc00;
   color: #111;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
   transition: all 0.3s ease;
 }
 
 .toggle-btn:hover {
-  background-color: #ffe065;
-}
-
-/* ===== DARK MODE CARD ===== */
-.signup-container.dark {
-  background: rgba(20, 20, 20, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background-color: #ffd633;
 }
 
 .signup-container.dark .toggle-btn {
   background-color: #555;
   color: #f5f5f5;
 }
-/* Dark mode: make switch text white */
+
+/* Switch link */
+.switch-link {
+  text-align: center;
+  margin-top: 18px;
+  font-weight: 400;
+  font-size: 20px;
+  color: #020202;
+}
+
+.switch-link .link {
+  cursor: pointer;
+  font-weight: bold;
+  color: #000000;
+}
+
 .signup-container.dark .switch-link {
-  color: #ffffff;
+  color: #aaa;
 }
 
 .signup-container.dark .switch-link .link {
-  color: #ffffff;
+  color: #fff;
 }
-
