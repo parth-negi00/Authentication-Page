@@ -26,13 +26,25 @@
   z-index: 0;
 }
 
+/* Light mode background (violet tone) */
+.auth-page.light .animated-bg {
+  background: linear-gradient(
+    120deg,
+    #7b4ae6,
+    #7b4ae6,
+    #7b4ae6,
+    #7b4ae6
+  );
+}
+
+/* Dark mode background */
 .auth-page.dark .animated-bg {
   background: linear-gradient(
     120deg,
-    #0f2027,
-    #203a43,
-    #2c5364,
-    #1c1c1c
+    #000000f6,
+    #000000f6,
+    #000000f6,
+    #000000f6
   );
 }
 
@@ -78,7 +90,7 @@
   /* Border + glow effect */
   -webkit-text-stroke: 0.8px rgba(0, 0, 0, 0.6);
   text-shadow:
-    0 0 6px rgba(255, 255, 255, 0.4),
+    0 0 6px rgba(17, 2, 2, 0.82),
     0 0 12px rgba(0, 0, 0, 0.4);
 
   letter-spacing: 1px;
@@ -148,7 +160,7 @@
   text-align: center;
   margin-top: 15px;
   font-weight: 500;
-  color: #ffe066;
+  color: #000000;
 }
 
 /* ===== SWITCH LINK (EXACT STYLE YOU LIKED) ===== */
@@ -156,14 +168,13 @@
   text-align: center;
   margin-top: 18px;
   font-weight: 500;
-  font-size: 15px;
-  color: #ffffff;
+  font-size: 20px;
+  color: #000000;
 
   /* Border + glow for visibility */
-  -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.6);
   text-shadow:
     0 0 5px rgba(0, 0, 0, 0.6),
-    0 0 10px rgba(255, 255, 255, 0.25);
+    0 0 10px rgb(255, 255, 255);
 }
 
 /* Clickable Login / Signup */
@@ -171,7 +182,7 @@
   cursor: pointer;
   font-weight: 700;
   margin-left: 4px;
-  color: #ffffff;
+  color: #000000;
 
   /* Stronger border + glow */
   -webkit-text-stroke: 0.6px rgba(0, 0, 0, 0.8);
@@ -205,7 +216,7 @@
 }
 
 .toggle-btn:hover {
-  background-color: #ffd633;
+  background-color: #ffe065;
 }
 
 /* ===== DARK MODE CARD ===== */
@@ -218,3 +229,12 @@
   background-color: #555;
   color: #f5f5f5;
 }
+/* Dark mode: make switch text white */
+.signup-container.dark .switch-link {
+  color: #ffffff;
+}
+
+.signup-container.dark .switch-link .link {
+  color: #ffffff;
+}
+
