@@ -4,36 +4,39 @@ import './App.css';
 
 // Import your pages
 import Signup from './components/Signup';
-import Dashboard from './Dashboard'; // Make sure this file exists!
+import Dashboard from './Dashboard';
+import Preview from './Preview'; 
+import FormBuilder from './FormBuilder'; // Ensure this is imported
 
-// --- 1. The Security Guard (Private Route) ---
-// This checks if a token exists. If not, it kicks the user back to the home page.
+// --- Security Guard ---
 const PrivateRoute = ({ children }) => {
   const token = localStorage.getItem("token");
   return token ? children : <Navigate to="/" />;
 };
 
+// --- Login Redirect ---
+const PublicRoute = ({ children }) => {
+  const token = localStorage.getItem("token");
+  return token ? <Navigate to="/dashboard" /> : children;
+};
+
 function App() {
   return (
-    // --- 2. The Router Wrapper ---
     <BrowserRouter>
       <Routes>
-        
-        {/* Public Route: This is your Signup/Login page */}
-        {/* We set path="/" so this is the first thing users see */}
-        <Route path="/" element={<Signup />} />
+        {/* Public Auth */}
+        <Route path="/" element={<PublicRoute><Signup /></PublicRoute>} />
 
-        {/* Protected Route: The Dashboard */}
-        {/* We wrap Dashboard inside PrivateRoute to protect it */}
-        <Route 
-          path="/dashboard" 
-          element={
-            <PrivateRoute>
-              <Dashboard />
-            </PrivateRoute>
-          } 
-        />
+        {/* Dashboard (The Table View) */}
+        <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
 
+        {/* Builder (The Editor) */}
+        <Route path="/builder" element={<PrivateRoute><FormBuilder /></PrivateRoute>} />
+
+        {/* Preview (The Live Form) */}
+        <Route path="/preview" element={<PrivateRoute><Preview /></PrivateRoute>} />
+
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
   );
