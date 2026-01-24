@@ -41,7 +41,8 @@ export default function FormBuilder() {
   const location = useLocation();
 
   // Get metadata passed from Dashboard (Card info or existing form info)
-  const { name, description, items: existingItems, isNew } = location.state || { 
+  // FIX: We specifically look for _id here
+  const { _id, name, description, items: existingItems, isNew } = location.state || { 
     name: "New Form", 
     description: "", 
     items: [], 
@@ -81,23 +82,19 @@ export default function FormBuilder() {
     setItems((prev) => prev.map(item => item.id === id ? { ...item, label: newLabel } : item));
   };
 
+  // --- UPDATED SAVE FUNCTION ---
   const handleSaveForm = () => {
     if (items.length === 0) return alert("Canvas is empty.");
     
-    // Automatically marking as Published per your requirement
-    const formToSave = {
-      id: isNew ? Date.now().toString() : location.state.id,
-      name,
-      description,
-      status: "Published",
-      lastUpdated: new Date().toLocaleDateString(),
-      items
-    };
-
-    console.log("Form Published:", formToSave);
-    
-    // For now, we go to preview. Later, this would 'POST' to your server.
-    navigate('/preview', { state: { items } }); 
+    navigate('/preview', { 
+      state: { 
+        // FIX: Pass the ID if we are editing an old form. If New, pass null.
+        id: isNew ? null : _id,
+        items, 
+        name, 
+        description 
+      } 
+    }); 
   };
 
   const handleDiscard = () => {

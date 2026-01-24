@@ -6,7 +6,8 @@ import './App.css';
 import Signup from './components/Signup';
 import Dashboard from './Dashboard';
 import Preview from './Preview'; 
-import FormBuilder from './FormBuilder'; // Ensure this is imported
+import FormBuilder from './FormBuilder'; 
+import View from './View';
 
 // --- Security Guard ---
 const PrivateRoute = ({ children }) => {
@@ -36,7 +37,12 @@ function App() {
         {/* Preview (The Live Form) */}
         <Route path="/preview" element={<PrivateRoute><Preview /></PrivateRoute>} />
 
+        {/* View (Read Only Page) */}
+        <Route path="/view" element={<PrivateRoute><View /></PrivateRoute>} />
+
+        {/* Catch-all - Must be at the bottom */}
         <Route path="*" element={<Navigate to="/" />} />
+        
       </Routes>
     </BrowserRouter>
   );
