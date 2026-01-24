@@ -5,6 +5,8 @@ const connectDB = require("./db");
 
 dotenv.config();
 
+const PORT = process.env.PORT || 5000;
+
 const app = express();
 
 // Connect DB FIRST
@@ -19,10 +21,13 @@ app.use(
     credentials: true,
   })
 );
-
+app.listen(PORT, () => {
+  console.log(`🚀 Server is running on http://localhost:${PORT}`);
+});
 
 // Routes
 app.use("/api/auth", require("./routes/auth"));
+app.use("/api/forms", require("./routes/forms"));
 
 app.get("/", (req, res) => {
   res.send("Auth API running");
