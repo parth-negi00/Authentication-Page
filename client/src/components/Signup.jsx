@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import "./Signup.css";
 import { useNavigate } from "react-router-dom"; // Already imported!
 
-const BACKEND_URL = "https://your-backend-name.vercel.app";
+const BACKEND_URL = "https://authentication-page-backend.vercel.app/";
 
 export default function AuthForm() {
   const [isSignup, setIsSignup] = useState(true);

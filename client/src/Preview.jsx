@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-const BACKEND_URL = "http://localhost:5000";
+const BACKEND_URL = "https://authentication-page-backend.vercel.app/";
 
 const Preview = () => {
   const location = useLocation();
