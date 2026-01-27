@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const BACKEND_URL = "https://authentication-page-backend.vercel.app/";
+const BACKEND_URL = "https://authentication-page-backend.vercel.app";
 
 export default function Dashboard() {
   const navigate = useNavigate();
