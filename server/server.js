@@ -23,7 +23,8 @@ app.use(express.json());
 // 4. Routes
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/forms", require("./routes/forms"));
-
+app.use("/api/users", require("./routes/users")); // You successfully added this
+app.use("/api/submissions", require("./routes/submissions")); // <--- ADD THIS LINE!
 // 5. Root Route (Health Check)
 app.get("/", (req, res) => {
   res.send("Auth API is running successfully!");

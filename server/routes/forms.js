@@ -1,35 +1,13 @@
 const express = require("express");
 const router = express.Router(); 
 const Form = require("../models/Form");
-const jwt = require("jsonwebtoken");
+const auth = require("../middleware/authMiddleware"); // USE THE REAL MIDDLEWARE
 
-// --- Middleware to verify Token ---
-const auth = (req, res, next) => {
-  const authHeader = req.header("Authorization");
-  const token = authHeader?.split(" ")[1];
-
-  // Debug logs to see what's happening with Auth
-  console.log("--- Auth Middleware ---");
-  console.log("1. Header:", authHeader);
-  console.log("2. Token:", token ? "Present" : "Missing");
-
-  if (!token) return res.status(401).json({ message: "No token, authorization denied" });
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
-    console.log("3. User ID decoded:", req.user.id);
-    next();
-  } catch (e) {
-    console.error("JWT Verify Error:", e.message);
-    res.status(400).json({ message: "Token is not valid" });
-  }
-};
-
-// --- GET ROUTE: Fetch all forms for Dashboard ---
+// --- GET ROUTE: Fetch all forms for the Organization ---
 router.get("/", auth, async (req, res) => {
   try {
-    const forms = await Form.find({ userId: req.user.id }).sort({ lastUpdated: -1 });
+    // UPDATED: Filter by Organization, not just User ID
+    const forms = await Form.find({ organizationId: req.user.organizationId }).sort({ lastUpdated: -1 });
     res.json(forms);
   } catch (err) {
     console.error("GET Error:", err.message);
@@ -40,35 +18,31 @@ router.get("/", auth, async (req, res) => {
 // --- POST ROUTE: Save (Publish) or Update a form ---
 router.post("/submit", auth, async (req, res) => {
   try {
-    console.log("--- 1. Submit/Update Route Hit ---");
     const { id, formName, description, items } = req.body;
 
     // A. UPDATE EXISTING FORM
     if (id) {
-        console.log(`--- Updating Existing Form: ${id} ---`);
-        
-        // Find by ID AND User (security check)
-        let form = await Form.findOne({ _id: id, userId: req.user.id });
+        // Ensure user owns the form OR belongs to same org
+        let form = await Form.findOne({ _id: id, organizationId: req.user.organizationId });
 
         if (!form) {
             return res.status(404).json({ message: "Form not found or unauthorized" });
         }
 
-        // Update fields
         form.name = formName;
         form.description = description;
         form.items = items;
         form.lastUpdated = Date.now();
 
         await form.save();
-        console.log("--- Update Successful! ---");
         return res.status(200).json(form);
     }
 
     // B. CREATE NEW FORM
-    console.log("--- Creating New Form ---");
+    // UPDATED: We must save organizationId now!
     const newForm = new Form({
-      userId: req.user.id,
+      organizationId: req.user.organizationId, // <--- CRITICAL NEW FIELD
+      createdBy: req.user.id,
       name: formName || "Untitled Form",
       description: description || "",
       items: items,
@@ -76,7 +50,6 @@ router.post("/submit", auth, async (req, res) => {
     });
 
     const savedForm = await newForm.save();
-    console.log("--- Create Successful! ---");
     res.status(201).json(savedForm);
 
   } catch (err) {
@@ -85,14 +58,12 @@ router.post("/submit", auth, async (req, res) => {
   }
 });
 
-// --- NEW DELETE ROUTE (Added this!) ---
+// --- DELETE ROUTE ---
 router.delete("/:id", auth, async (req, res) => {
   try {
-    console.log(`--- Deleting Form: ${req.params.id} ---`);
-    
     const form = await Form.findOneAndDelete({ 
       _id: req.params.id, 
-      userId: req.user.id // Security: Ensure user owns the form
+      organizationId: req.user.organizationId // Security check
     });
 
     if (!form) {

@@ -1,7 +1,14 @@
 const mongoose = require("mongoose");
 
 const FormSchema = new mongoose.Schema({
-  userId: { 
+  // Link the form to the Organization
+  organizationId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Organization",
+    required: true
+  },
+  // The Admin who created it
+  createdBy: { 
     type: mongoose.Schema.Types.ObjectId, 
     ref: "User", 
     required: true 
@@ -26,6 +33,5 @@ const FormSchema = new mongoose.Schema({
     default: Date.now 
   }
 });
-
 
 module.exports = mongoose.model("Form", FormSchema);

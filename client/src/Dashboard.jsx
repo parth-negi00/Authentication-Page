@@ -1,176 +1,244 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const BACKEND_URL = "https://authentication-page-backend.vercel.app";
+const BACKEND_URL = window.location.hostname === "localhost" 
+  ? "http://localhost:5000" 
+  : "https://authentication-page-backend.vercel.app";
 
-export default function Dashboard() {
-  const navigate = useNavigate();
-  
-  const [forms, setForms] = useState([]); 
-  const [loading, setLoading] = useState(true); 
-  const [showModal, setShowModal] = useState(false);
-  const [newFormDetails, setNewFormDetails] = useState({ name: "", description: "" });
+const Dashboard = () => {
+    const navigate = useNavigate();
+    const [user, setUser] = useState(null);
+    const [activeTab, setActiveTab] = useState("forms"); 
+    
+    // Data States
+    const [forms, setForms] = useState([]);
+    const [users, setUsers] = useState([]);
+    
+    // Search States (Keep these to filter the list)
+    const [searchId, setSearchId] = useState("");
+    const [searchOrgId, setSearchOrgId] = useState("");
 
-  // --- 1. FETCH FORMS ---
-  useEffect(() => {
-    const fetchForms = async () => {
-      try {
+    // New User Form State
+    const [newUser, setNewUser] = useState({ name: '', email: '', password: '', mobileNumber: '' });
+    const [isCreatingUser, setIsCreatingUser] = useState(false);
+
+    useEffect(() => {
         const token = localStorage.getItem("token");
-        const res = await fetch(`${BACKEND_URL}/api/forms`, {
-          method: "GET",
-          headers: { "Authorization": `Bearer ${token}` }
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          setForms(data); 
+        const userData = JSON.parse(localStorage.getItem("user"));
+        
+        if (!token || !userData) {
+            navigate("/login");
+        } else {
+            setUser(userData);
+            fetchForms(token);
+            if (userData.privilege === 'admin') {
+                fetchUsers(token);
+            }
         }
-      } catch (err) {
-        console.error("Server error:", err);
-      } finally {
-        setLoading(false);
-      }
+    }, [navigate]);
+
+    // --- API CALLS ---
+    const fetchForms = async (token) => {
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/forms`, {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (res.ok) setForms(data);
+        } catch (err) { console.error("Error fetching forms", err); }
     };
-    fetchForms();
-  }, []);
 
-  // --- 2. DELETE FUNCTION ---
-  const handleDelete = async (id) => {
-    // 1. Confirm intention
-    if (!window.confirm("Are you sure you want to delete this form? This cannot be undone.")) {
-      return;
-    }
+    const fetchUsers = async (token) => {
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/users`, {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (res.ok) setUsers(data);
+        } catch (err) { console.error("Error fetching users", err); }
+    };
 
-    try {
-      const token = localStorage.getItem("token");
-      // 2. Call Backend
-      const res = await fetch(`${BACKEND_URL}/api/forms/${id}`, {
-        method: "DELETE",
-        headers: { "Authorization": `Bearer ${token}` }
-      });
+    const handleCreateUser = async (e) => {
+        e.preventDefault();
+        const token = localStorage.getItem("token");
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/users`, {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}` 
+                },
+                body: JSON.stringify(newUser)
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert("User Created Successfully!");
+                setUsers([...users, data]); 
+                setIsCreatingUser(false);
+                setNewUser({ name: '', email: '', password: '', mobileNumber: '' });
+            } else {
+                alert(data.message || "Failed to create user");
+            }
+        } catch (err) {
+            alert("Server Error");
+        }
+    };
 
-      if (res.ok) {
-        // 3. Update UI (Remove the deleted item from the list locally)
-        setForms(forms.filter(form => form._id !== id));
-        alert("Form deleted successfully.");
-      } else {
-        alert("Failed to delete form.");
-      }
-    } catch (err) {
-      console.error("Delete error:", err);
-      alert("Server error.");
-    }
-  };
+    const handleLogout = () => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        navigate("/login");
+    };
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/");
-  };
+    const handleCreateForm = () => {
+        navigate("/FormBuilder.jsx"); 
+    };
 
-  const handleCreateRedirect = (e) => {
-    e.preventDefault();
-    navigate("/builder", { state: { ...newFormDetails, isNew: true } });
-  };
+    // --- SEARCH FILTER LOGIC ---
+    // We filter based on IDs, even though we don't show them in the table
+    const filteredUsers = users.filter(u => {
+        const matchId = searchId ? u._id.toLowerCase().includes(searchId.toLowerCase()) : true;
+        const matchOrg = searchOrgId ? (u.organizationId || "").toLowerCase().includes(searchOrgId.toLowerCase()) : true;
+        
+        return matchId && matchOrg;
+    });
 
-  if (loading) return <div style={{ padding: '50px', textAlign: 'center' }}>Loading your forms...</div>;
+    if (!user) return <div>Loading...</div>;
 
-  return (
-    <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-      <nav style={{ padding: '10px 20px', background: '#333', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h3>Enterprise Resource Portal</h3>
-        <button onClick={handleLogout} style={{ background: 'red', color: 'white', border: 'none', padding: '8px 15px', cursor: 'pointer', borderRadius: '4px' }}>Logout</button>
-      </nav>
+    return (
+        <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
+            {/* HEADER */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', borderBottom: '1px solid #ddd', paddingBottom: '10px' }}>
+                <div>
+                    <h1 style={{ margin: 0 }}>{user.name}'s Dashboard</h1>
+                    <div style={{ marginTop: '5px' }}>
+                        <span style={{ color: '#666', fontSize: '14px', marginRight: '15px' }}>
+                            Role: <strong>{user.privilege === 'admin' ? 'Admin 👑' : 'Respondent'}</strong>
+                        </span>
+                        <span style={{ fontSize: '12px', background: '#eee', padding: '3px 8px', borderRadius: '4px' }}>
+                            Your Org ID: {user.organizationId}
+                        </span>
+                    </div>
+                </div>
+                <button onClick={handleLogout} style={{ padding: '8px 16px', background: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Logout</button>
+            </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h2>Forms</h2>
-        <button 
-          onClick={() => setShowModal(true)} 
-          style={{ padding: '10px 20px', background: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}
-        >
-          + Create New Form
-        </button>
-      </div>
+            {/* TABS (Only for Admin) */}
+            {user.privilege === 'admin' && (
+                <div style={{ marginBottom: '20px' }}>
+                    <button 
+                        onClick={() => setActiveTab("forms")} 
+                        style={{ padding: '10px 20px', marginRight: '10px', background: activeTab === 'forms' ? '#007bff' : '#f0f0f0', color: activeTab === 'forms' ? 'white' : 'black', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                    >
+                        📝 Manage Forms
+                    </button>
+                    <button 
+                        onClick={() => setActiveTab("users")} 
+                        style={{ padding: '10px 20px', background: activeTab === 'users' ? '#007bff' : '#f0f0f0', color: activeTab === 'users' ? 'white' : 'black', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                    >
+                        👥 Manage Users
+                    </button>
+                </div>
+            )}
 
-      {forms.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '50px', border: '2px dashed #ccc', color: '#888' }}>
-          <h3>No forms found</h3>
-          <p>Click "Create New Form" to get started.</p>
+            {/* === FORMS TAB === */}
+            {activeTab === 'forms' && (
+                <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+                        <h3>Your Forms</h3>
+                        <button onClick={handleCreateForm} style={{ padding: '10px 15px', background: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>+ Create New Form</button>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '20px' }}>
+                        {forms.map(form => (
+                            <div key={form._id} style={{ border: '1px solid #ddd', padding: '15px', borderRadius: '8px', background: 'white', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
+                                <h4 style={{ margin: '0 0 10px 0' }}>{form.name}</h4>
+                                <p style={{ color: '#666', fontSize: '13px' }}>{form.description || "No description"}</p>
+                                <div style={{ marginTop: '15px' }}>
+                                    <button onClick={() => navigate('/preview', { state: form })} style={{ fontSize: '12px', padding: '5px 10px', background: '#17a2b8', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}>View/Fill</button>
+                                </div>
+                            </div>
+                        ))}
+                        {forms.length === 0 && <p>No forms created yet.</p>}
+                    </div>
+                </div>
+            )}
+
+            {/* === USERS TAB === */}
+            {activeTab === 'users' && (
+                <div>
+                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+                        <div>
+                            <h3>Organization Users</h3>
+                            
+                            {/* SEARCH INPUTS (Preserved) */}
+                            <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                                <input 
+                                    type="text" 
+                                    placeholder="Search by User ID..." 
+                                    value={searchId}
+                                    onChange={(e) => setSearchId(e.target.value)}
+                                    style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px', width: '200px' }}
+                                />
+                                <input 
+                                    type="text" 
+                                    placeholder="Search by Org ID..." 
+                                    value={searchOrgId}
+                                    onChange={(e) => setSearchOrgId(e.target.value)}
+                                    style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px', width: '200px' }}
+                                />
+                            </div>
+                        </div>
+
+                        <button onClick={() => setIsCreatingUser(!isCreatingUser)} style={{ padding: '10px 15px', background: isCreatingUser ? '#666' : '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+                            {isCreatingUser ? "Cancel" : "+ Add User"}
+                        </button>
+                    </div>
+
+                    {/* ADD USER FORM */}
+                    {isCreatingUser && (
+                        <div style={{ background: '#f9f9f9', padding: '20px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #ddd' }}>
+                            <h4>Add New Respondent</h4>
+                            <form onSubmit={handleCreateUser} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                <input type="text" placeholder="Full Name" value={newUser.name} onChange={e => setNewUser({...newUser, name: e.target.value})} required style={{ padding: '8px' }} />
+                                <input type="email" placeholder="Email Address" value={newUser.email} onChange={e => setNewUser({...newUser, email: e.target.value})} required style={{ padding: '8px' }} />
+                                <input type="password" placeholder="Password" value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} required style={{ padding: '8px' }} />
+                                <input type="text" placeholder="Mobile Number" value={newUser.mobileNumber} onChange={e => setNewUser({...newUser, mobileNumber: e.target.value})} style={{ padding: '8px' }} />
+                                <button type="submit" style={{ gridColumn: 'span 2', padding: '10px', background: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Create User</button>
+                            </form>
+                        </div>
+                    )}
+
+                    {/* USERS TABLE (Reverted Columns) */}
+                    <table style={{ width: '100%', borderCollapse: 'collapse', background: 'white' }}>
+                        <thead>
+                            <tr style={{ background: '#f8f9fa', textAlign: 'left' }}>
+                                <th style={{ padding: '12px', borderBottom: '2px solid #ddd' }}>Name</th>
+                                <th style={{ padding: '12px', borderBottom: '2px solid #ddd' }}>Email</th>
+                                <th style={{ padding: '12px', borderBottom: '2px solid #ddd' }}>Mobile</th>
+                                <th style={{ padding: '12px', borderBottom: '2px solid #ddd' }}>Joined</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredUsers.map(u => (
+                                <tr key={u._id} style={{ borderBottom: '1px solid #eee' }}>
+                                    <td style={{ padding: '12px' }}>{u.name}</td>
+                                    <td style={{ padding: '12px' }}>{u.email}</td>
+                                    <td style={{ padding: '12px' }}>{u.mobileNumber || "N/A"}</td>
+                                    <td style={{ padding: '12px' }}>{new Date(u.createdAt).toLocaleDateString()}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                    
+                    {filteredUsers.length === 0 && (
+                        <p style={{ marginTop: '20px', color: '#666', textAlign: 'center' }}>
+                            {users.length === 0 ? "No users found in your organization." : "No users match your search."}
+                        </p>
+                    )}
+                </div>
+            )}
         </div>
-      ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: 'white', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-          <thead>
-            <tr style={{ background: '#f8f9fa', textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>
-              <th style={tableHeaderStyle}>Form Name</th>
-              <th style={tableHeaderStyle}>Description</th>
-              <th style={tableHeaderStyle}>Status</th>
-              <th style={tableHeaderStyle}>Last Updated</th>
-              <th style={tableHeaderStyle}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {forms.map((form) => (
-              <tr key={form._id} style={{ borderBottom: '1px solid #eee' }}>
-                <td style={tableCellStyle}>{form.name}</td>
-                <td style={tableCellStyle}>{form.description}</td>
-                <td style={tableCellStyle}>
-                  <span style={{ padding: '4px 8px', borderRadius: '12px', fontSize: '12px', background: '#d4edda', color: '#155724' }}>
-                    {form.status || 'Published'}
-                  </span>
-                </td>
-                <td style={tableCellStyle}>
-                  {new Date(form.lastUpdated).toLocaleDateString()}
-                </td>
-                <td style={tableCellStyle}>
-                  {/* VIEW */}
-                  <button onClick={() => navigate('/view', { state: form })} style={actionBtnStyle}>View</button>
-                  
-                  {/* EDIT */}
-                  <button onClick={() => navigate('/builder', { state: { ...form, isNew: false } })} style={{ ...actionBtnStyle, background: '#ffc107' }}>Edit</button>
+    );
+};
 
-                  {/* DELETE - New Button */}
-                  <button 
-                    onClick={() => handleDelete(form._id)} 
-                    style={{ ...actionBtnStyle, background: '#dc3545', marginRight: 0 }}
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-
-      {/* Create Form Modal */}
-      {showModal && (
-        <div style={modalOverlayStyle}>
-          <div style={modalCardStyle}>
-            <h3>Create New Form</h3>
-            <form onSubmit={handleCreateRedirect}>
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px' }}>Form Name</label>
-                <input required style={modalInputStyle} type="text" value={newFormDetails.name} onChange={(e) => setNewFormDetails({...newFormDetails, name: e.target.value})} placeholder="e.g. Employee Survey" />
-              </div>
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', marginBottom: '5px' }}>Description</label>
-                <textarea required style={modalInputStyle} value={newFormDetails.description} onChange={(e) => setNewFormDetails({...newFormDetails, description: e.target.value})} placeholder="Describe the purpose..." />
-              </div>
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-                <button type="button" onClick={() => setShowModal(false)} style={{ padding: '8px 15px', background: '#ccc', border: 'none', borderRadius: '4px' }}>Cancel</button>
-                <button type="submit" style={{ padding: '8px 15px', background: '#28a745', color: 'white', border: 'none', borderRadius: '4px' }}>Continue to Builder</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// Styles
-const tableHeaderStyle = { padding: '12px', borderBottom: '1px solid #dee2e6' };
-const tableCellStyle = { padding: '12px' };
-const actionBtnStyle = { marginRight: '5px', padding: '5px 10px', background: '#17a2b8', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' };
-const modalOverlayStyle = { position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 };
-const modalCardStyle = { background: 'white', padding: '30px', borderRadius: '8px', width: '400px', boxShadow: '0 4px 15px rgba(0,0,0,0.2)' };
-const modalInputStyle = { width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box' };
+export default Dashboard;

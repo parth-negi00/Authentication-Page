@@ -1,15 +1,26 @@
 import React, { useState, useEffect } from "react";
-import "./Signup.css";
-import { useNavigate } from "react-router-dom"; // Already imported!
+import "./Signup.css"; 
+import { useNavigate } from "react-router-dom"; 
 
-const BACKEND_URL = "https://authentication-page-backend.vercel.app";
+// FIX 1: Use Localhost for testing, Vercel for production
+const BACKEND_URL = window.location.hostname === "localhost" 
+  ? "http://localhost:5000" 
+  : "https://authentication-page-backend.vercel.app";
 
 export default function AuthForm() {
   const [isSignup, setIsSignup] = useState(true);
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  
+  // FIX 2: Added 'organizationName' to the form state
+  const [form, setForm] = useState({ 
+    name: "", 
+    email: "", 
+    password: "", 
+    organizationName: "" 
+  });
+  
   const [message, setMessage] = useState("");
   const [darkMode, setDarkMode] = useState(false);
-  const navigate = useNavigate(); // Hook initialized
+  const navigate = useNavigate(); 
   
   useEffect(() => {
     const savedMode = localStorage.getItem("darkMode") === "true";
@@ -27,7 +38,7 @@ export default function AuthForm() {
     setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevents the "new tab" or reload issue
     const endpoint = isSignup ? "signup" : "login";
 
     try {
@@ -40,17 +51,17 @@ export default function AuthForm() {
       const data = await res.json();
 
       if (res.ok) {
-        // 1. Save the token
+        // FIX 3: Store the new User Object correctly
         localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
         
-        // 2. Set the success message
         setMessage(
           isSignup
-            ? `Signup successful! Welcome ${data.user.name}`
+            ? `Signup successful! Organization "${data.user.organizationId}" Created.`
             : `Login successful! Welcome back ${data.user.name}`
         );
 
-        // 3. REDIRECT to Dashboard after a short delay
+        // Redirect to Dashboard
         setTimeout(() => {
           navigate("/dashboard");
         }, 1500);
@@ -59,6 +70,7 @@ export default function AuthForm() {
         setMessage(data.message || "Something went wrong");
       }
     } catch (error) {
+      console.error("Auth Error:", error);
       setMessage("Server error. Please try again later.");
     }
   };
@@ -66,7 +78,8 @@ export default function AuthForm() {
   const switchMode = (signupMode) => {
     setIsSignup(signupMode);
     setMessage("");
-    setForm({ name: "", email: "", password: "" });
+    // Reset form (including the new org field)
+    setForm({ name: "", email: "", password: "", organizationName: "" });
   };
 
   return (
@@ -77,18 +90,30 @@ export default function AuthForm() {
           {darkMode ? "Light Mode" : "Dark Mode"}
         </button>
 
-        <h2>{isSignup ? "Signup" : "Login"}</h2>
+        <h2>{isSignup ? "SignUp" : "Login"}</h2>
 
         <form onSubmit={handleSubmit}>
           {isSignup && (
-            <input
-              type="text"
-              name="name"
-              placeholder="Name"
-              value={form.name}
-              onChange={handleChange}
-              required
-            />
+            <>
+                <input
+                    type="text"
+                    name="name"
+                    placeholder="Your Name"
+                    value={form.name}
+                    onChange={handleChange}
+                    required
+                />
+
+                {/* FIX 4: The New Organization Input (Only visible in Signup) */}
+                <input
+                    type="text"
+                    name="organizationName"
+                    placeholder="Organization/Designation"
+                    value={form.organizationName}
+                    onChange={handleChange}
+                    required
+                />
+            </>
           )}
 
           <input
