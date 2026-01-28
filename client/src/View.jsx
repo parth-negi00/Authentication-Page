@@ -20,6 +20,7 @@ export default function View() {
     useEffect(() => {
         if (!_id) return;
         fetchSubmission();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [_id]);
 
     const fetchSubmission = async () => {

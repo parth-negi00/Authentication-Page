@@ -1,16 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react'; // <--- 1. Import useCallback
 import { useLocation, useNavigate } from 'react-router-dom';
-
-const BACKEND_URL = window.location.hostname === "localhost" 
-  ? "http://localhost:5000" 
-  : "https://authentication-page-backend.vercel.app";
+import { BACKEND_URL } from './apiConfig'; 
 
 export default function Responses() {
     const location = useLocation();
     const navigate = useNavigate();
     const { _id, name, items } = location.state || {};
     
-    // Get Current User to check privileges (Admin vs Respondent)
     const currentUser = JSON.parse(localStorage.getItem("user"));
     const isAdmin = currentUser?.privilege === 'admin';
 
@@ -18,16 +14,11 @@ export default function Responses() {
     const [selectedSubmission, setSelectedSubmission] = useState(null); 
     const [loading, setLoading] = useState(true);
 
-    // Editing States (Admin Only)
     const [isEditing, setIsEditing] = useState(false);
     const [editData, setEditData] = useState({}); 
 
-    useEffect(() => {
-        if (!_id) return;
-        fetchResponses();
-    }, [_id]);
-
-    const fetchResponses = async () => {
+    // --- FIX: Wrap this function in useCallback ---
+    const fetchResponses = useCallback(async () => {
         const token = localStorage.getItem("token");
         try {
             const res = await fetch(`${BACKEND_URL}/api/submissions/form/${_id}`, {
@@ -40,7 +31,13 @@ export default function Responses() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [_id]); // <--- Dependency for the function itself
+
+    // --- FIX: Add fetchResponses to dependency array ---
+    useEffect(() => {
+        if (!_id) return;
+        fetchResponses();
+    }, [_id, fetchResponses]); 
 
     const handleOpenModal = (sub) => {
         setSelectedSubmission(sub);
@@ -52,13 +49,11 @@ export default function Responses() {
         setEditData(prev => ({ ...prev, [qId]: value }));
     };
 
-    // --- UPDATED: SAVE LOGIC (Updates Existing Row + Saves History) ---
     const handleSaveChanges = async () => {
         if (!window.confirm("Update this submission? This will archive the old version.")) return;
 
         const token = localStorage.getItem("token");
         try {
-            // WE USE PUT NOW (Update In Place)
             const res = await fetch(`${BACKEND_URL}/api/submissions/${selectedSubmission._id}`, {
                 method: "PUT", 
                 headers: { 
@@ -70,7 +65,7 @@ export default function Responses() {
 
             if (res.ok) {
                 alert("Submission Updated! Old version saved to history.");
-                fetchResponses(); // Refresh list to show updated data
+                fetchResponses(); 
                 setSelectedSubmission(null);
                 setIsEditing(false);
             } else {
@@ -86,7 +81,6 @@ export default function Responses() {
 
     return (
         <div style={{ padding: '20px', maxWidth: '1000px', margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
-            {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                 <div>
                     <h1 style={{ margin: 0 }}>{isAdmin ? `All Responses: ${name}` : `My History: ${name}`}</h1>
@@ -95,7 +89,6 @@ export default function Responses() {
                 <button onClick={() => navigate('/dashboard')} style={{ padding: '8px 16px', background: '#6c757d', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Back to Dashboard</button>
             </div>
 
-            {/* DATA TABLE */}
             {loading ? <p>Loading data...</p> : (
                 <div style={{ background: 'white', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -112,7 +105,6 @@ export default function Responses() {
                                     <td style={{ padding: '15px' }}>{sub.userId?.name || "You"}</td>
                                     <td style={{ padding: '15px' }}>{new Date(sub.submittedAt).toLocaleString()}</td>
                                     <td style={{ padding: '15px', display: 'flex', gap: '8px' }}>
-                                        {/* VIEW / EDIT BUTTON */}
                                         <button 
                                             onClick={() => handleOpenModal(sub)}
                                             style={{ padding: '6px 12px', background: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px' }}
@@ -120,7 +112,6 @@ export default function Responses() {
                                             View Details
                                         </button>
                                         
-                                        {/* HISTORY BUTTON - Navigates to timeline page */}
                                         <button 
                                             onClick={() => navigate(`/history/${sub._id}`)}
                                             style={{ padding: '6px 12px', background: '#6610f2', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px' }}
@@ -141,7 +132,6 @@ export default function Responses() {
                 </div>
             )}
 
-            {/* === DETAIL MODAL === */}
             {selectedSubmission && (
                 <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                     <div style={{ background: 'white', padding: '30px', borderRadius: '8px', width: '600px', maxHeight: '80vh', overflowY: 'auto' }}>
@@ -156,7 +146,6 @@ export default function Responses() {
                                 <p style={{margin: '5px 0'}}><strong>Date:</strong> {new Date(selectedSubmission.submittedAt).toLocaleString()}</p>
                             </div>
                             
-                            {/* SECURITY: Only Admin can see the Edit Button */}
                             {isAdmin && (
                                 !isEditing ? (
                                     <button 
