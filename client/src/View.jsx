@@ -13,6 +13,7 @@ export default function View() {
     const { _id, name, description, items } = location.state || {};
     
     // State to hold the user's FETCHED answers
+    // FIX: Initialize as empty object
     const [answers, setAnswers] = useState({});
     const [loading, setLoading] = useState(true);
 
@@ -33,11 +34,13 @@ export default function View() {
             
             if (res.ok) {
                 // 3. Find the submission that matches THIS form
-                // We grab the LATEST one (data[0] because usually sorted by date)
                 const mySubmission = data.find(sub => sub.formId === _id);
                 
                 if (mySubmission) {
-                    setAnswers(mySubmission.data);
+                    // FIX: Ensure we never set state to null/undefined
+                    setAnswers(mySubmission.data || {});
+                } else {
+                    setAnswers({});
                 }
             }
         } catch (err) {
@@ -55,8 +58,13 @@ export default function View() {
             <div style={{ background: 'white', padding: '30px', borderRadius: '8px', borderTop: '8px solid #17a2b8', boxShadow: '0 2px 5px rgba(0,0,0,0.1)', marginBottom: '20px' }}>
                 <h1 style={{ margin: '0 0 10px 0', fontSize: '32px' }}>{name} <span style={{fontSize:'14px', color:'#666'}}>(Read Only)</span></h1>
                 <p style={{ color: '#666', fontSize: '14px' }}>{description}</p>
+                
                 {loading && <p style={{color: '#007bff'}}>Checking for your submission...</p>}
-                {!loading && Object.keys(answers).length === 0 && <p style={{color: '#dc3545'}}>You have not submitted this form yet.</p>}
+                
+                {/* FIX: Safeguard the check so it doesn't crash if answers is null */}
+                {!loading && answers && Object.keys(answers).length === 0 && (
+                    <p style={{color: '#dc3545'}}>You have not submitted this form yet.</p>
+                )}
             </div>
 
             {/* Questions Loop (Populated & Disabled) */}
@@ -71,7 +79,8 @@ export default function View() {
                 }
 
                 // Get the saved answer for this question (if any)
-                const userAnswer = answers[q.id] || "";
+                // FIX: Check if answers exists before accessing properties
+                const userAnswer = (answers && answers[q.id]) || "";
 
                 return (
                     <div key={q.id} style={{ background: 'white', padding: '25px', borderRadius: '8px', border: '1px solid #ddd', marginBottom: '15px', opacity: 0.8 }}>

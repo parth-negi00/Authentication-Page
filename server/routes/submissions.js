@@ -65,4 +65,30 @@ router.get("/user/:userId", auth, async (req, res) => {
   }
 });
 
+// @route   GET /api/submissions/form/:formId
+// @desc    Get ALL submissions for a specific form (Admin Only)
+// @access  Private
+router.get("/form/:formId", auth, async (req, res) => {
+  try {
+    // 1. Security Check: Only Admins can see all responses
+    if (req.user.privilege !== 'admin') {
+      return res.status(403).json({ message: "Access Denied" });
+    }
+
+    // 2. Fetch submissions AND "Populate" (join) user details
+    // This turns "userId": "123" into "userId": { name: "Akash", email: "..." }
+    const submissions = await Submission.find({ 
+      formId: req.params.formId,
+      organizationId: req.user.organizationId 
+    })
+    .populate("userId", "name email") // <--- MAGIC LINE
+    .sort({ submittedAt: -1 });
+
+    res.json(submissions);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server Error");
+  }
+});
+
 module.exports = router;
