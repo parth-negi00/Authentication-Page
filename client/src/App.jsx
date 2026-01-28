@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 
 // Import your pages
+import History from './History'; // Import at top
 import Signup from './components/Signup';
 import Dashboard from './Dashboard';
 import Preview from './Preview';
@@ -55,6 +56,9 @@ function App() {
         {/* Catch-all - MUST BE LAST */}
         <Route path="*" element={<Navigate to="/" />} />
         
+
+{/* Inside routes*/}
+<Route path="/history/:submissionId" element={<PrivateRoute><History /></PrivateRoute>} />
       </Routes>
     </BrowserRouter>
   );

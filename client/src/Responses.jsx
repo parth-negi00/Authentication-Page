@@ -8,13 +8,19 @@ const BACKEND_URL = window.location.hostname === "localhost"
 export default function Responses() {
     const location = useLocation();
     const navigate = useNavigate();
-    
-    // Get Form Info passed from Dashboard
     const { _id, name, items } = location.state || {};
     
+    // Get Current User to check privileges (Admin vs Respondent)
+    const currentUser = JSON.parse(localStorage.getItem("user"));
+    const isAdmin = currentUser?.privilege === 'admin';
+
     const [submissions, setSubmissions] = useState([]);
     const [selectedSubmission, setSelectedSubmission] = useState(null); 
     const [loading, setLoading] = useState(true);
+
+    // Editing States (Admin Only)
+    const [isEditing, setIsEditing] = useState(false);
+    const [editData, setEditData] = useState({}); 
 
     useEffect(() => {
         if (!_id) return;
@@ -28,13 +34,51 @@ export default function Responses() {
                 headers: { "Authorization": `Bearer ${token}` }
             });
             const data = await res.json();
-            if (res.ok) {
-                setSubmissions(data);
-            }
+            if (res.ok) setSubmissions(data);
         } catch (err) {
             console.error("Error:", err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleOpenModal = (sub) => {
+        setSelectedSubmission(sub);
+        setEditData(sub.data || {}); 
+        setIsEditing(false); 
+    };
+
+    const handleEditChange = (qId, value) => {
+        setEditData(prev => ({ ...prev, [qId]: value }));
+    };
+
+    // --- UPDATED: SAVE LOGIC (Updates Existing Row + Saves History) ---
+    const handleSaveChanges = async () => {
+        if (!window.confirm("Update this submission? This will archive the old version.")) return;
+
+        const token = localStorage.getItem("token");
+        try {
+            // WE USE PUT NOW (Update In Place)
+            const res = await fetch(`${BACKEND_URL}/api/submissions/${selectedSubmission._id}`, {
+                method: "PUT", 
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}` 
+                },
+                body: JSON.stringify({ data: editData })
+            });
+
+            if (res.ok) {
+                alert("Submission Updated! Old version saved to history.");
+                fetchResponses(); // Refresh list to show updated data
+                setSelectedSubmission(null);
+                setIsEditing(false);
+            } else {
+                alert("Failed to update.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Server Error");
         }
     };
 
@@ -45,7 +89,7 @@ export default function Responses() {
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                 <div>
-                    <h1 style={{ margin: 0 }}>Responses: {name}</h1>
+                    <h1 style={{ margin: 0 }}>{isAdmin ? `All Responses: ${name}` : `My History: ${name}`}</h1>
                     <p style={{ color: '#666' }}>Total Submissions: {submissions.length}</p>
                 </div>
                 <button onClick={() => navigate('/dashboard')} style={{ padding: '8px 16px', background: '#6c757d', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Back to Dashboard</button>
@@ -57,32 +101,39 @@ export default function Responses() {
                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                         <thead>
                             <tr style={{ background: '#f8f9fa', textAlign: 'left' }}>
-                                <th style={{ padding: '15px', borderBottom: '2px solid #ddd' }}>Employee</th>
-                                <th style={{ padding: '15px', borderBottom: '2px solid #ddd' }}>Email</th>
-                                <th style={{ padding: '15px', borderBottom: '2px solid #ddd' }}>Date</th>
+                                <th style={{ padding: '15px', borderBottom: '2px solid #ddd' }}>{isAdmin ? "Employee Name" : "Submitted By"}</th>
+                                <th style={{ padding: '15px', borderBottom: '2px solid #ddd' }}>Latest Update</th>
                                 <th style={{ padding: '15px', borderBottom: '2px solid #ddd' }}>Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             {submissions.map((sub) => (
                                 <tr key={sub._id} style={{ borderBottom: '1px solid #eee' }}>
-                                    {/* Safely handle missing user details */}
-                                    <td style={{ padding: '15px' }}>{sub.userId?.name || "Unknown User"}</td>
-                                    <td style={{ padding: '15px' }}>{sub.userId?.email || "No Email"}</td>
+                                    <td style={{ padding: '15px' }}>{sub.userId?.name || "You"}</td>
                                     <td style={{ padding: '15px' }}>{new Date(sub.submittedAt).toLocaleString()}</td>
-                                    <td style={{ padding: '15px' }}>
+                                    <td style={{ padding: '15px', display: 'flex', gap: '8px' }}>
+                                        {/* VIEW / EDIT BUTTON */}
                                         <button 
-                                            onClick={() => setSelectedSubmission(sub)}
+                                            onClick={() => handleOpenModal(sub)}
                                             style={{ padding: '6px 12px', background: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px' }}
                                         >
-                                            View Answers
+                                            View Details
+                                        </button>
+                                        
+                                        {/* HISTORY BUTTON - Navigates to timeline page */}
+                                        <button 
+                                            onClick={() => navigate(`/history/${sub._id}`)}
+                                            style={{ padding: '6px 12px', background: '#6610f2', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px' }}
+                                            title="View Version History"
+                                        >
+                                            🕒 History {sub.history && sub.history.length > 0 ? `(${sub.history.length})` : ''}
                                         </button>
                                     </td>
                                 </tr>
                             ))}
                             {submissions.length === 0 && (
                                 <tr>
-                                    <td colSpan="4" style={{ padding: '20px', textAlign: 'center', color: '#666' }}>No responses yet.</td>
+                                    <td colSpan="3" style={{ padding: '20px', textAlign: 'center', color: '#666' }}>No history found.</td>
                                 </tr>
                             )}
                         </tbody>
@@ -90,39 +141,85 @@ export default function Responses() {
                 </div>
             )}
 
-            {/* === DETAIL MODAL (Pop-up) === */}
+            {/* === DETAIL MODAL === */}
             {selectedSubmission && (
                 <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                     <div style={{ background: 'white', padding: '30px', borderRadius: '8px', width: '600px', maxHeight: '80vh', overflowY: 'auto' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
+                        
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
                             <h2 style={{ margin: 0 }}>Submission Details</h2>
                             <button onClick={() => setSelectedSubmission(null)} style={{ background: 'transparent', border: 'none', fontSize: '20px', cursor: 'pointer' }}>✖</button>
                         </div>
                         
-                        <p><strong>By:</strong> {selectedSubmission.userId?.name || "Unknown"}</p>
-                        <p><strong>Date:</strong> {new Date(selectedSubmission.submittedAt).toLocaleString()}</p>
+                        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                            <div>
+                                <p style={{margin: '5px 0'}}><strong>Date:</strong> {new Date(selectedSubmission.submittedAt).toLocaleString()}</p>
+                            </div>
+                            
+                            {/* SECURITY: Only Admin can see the Edit Button */}
+                            {isAdmin && (
+                                !isEditing ? (
+                                    <button 
+                                        onClick={() => setIsEditing(true)} 
+                                        style={{ padding: '8px 15px', background: '#ffc107', color: 'black', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                                    >
+                                        ✏️ Edit
+                                    </button>
+                                ) : (
+                                    <button 
+                                        onClick={() => setIsEditing(false)} 
+                                        style={{ padding: '8px 15px', background: '#6c757d', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                                    >
+                                        Cancel
+                                    </button>
+                                )
+                            )}
+                        </div>
+
                         <hr style={{ margin: '20px 0', border: 'none', borderTop: '1px solid #eee' }} />
 
-                        {/* RENDER ANSWERS LOOP */}
                         {items.map(q => {
                             if (q.type === 'section') return <h4 key={q.id} style={{ color: '#666', borderBottom: '1px solid #ddd' }}>{q.label}</h4>;
                             
-                            // --- THE FIX IS HERE ---
-                            // We use (selectedSubmission.data || {}) so it never reads from undefined
-                            const answerData = selectedSubmission.data || {};
-                            const answer = answerData[q.id];
-                            
+                            const currentVal = editData[q.id] || "";
+
                             return (
                                 <div key={q.id} style={{ marginBottom: '15px' }}>
                                     <strong style={{ display: 'block', fontSize: '14px', marginBottom: '5px' }}>{q.label}</strong>
-                                    <div style={{ background: '#f9f9f9', padding: '10px', borderRadius: '4px', fontSize: '14px' }}>
-                                        {Array.isArray(answer) ? answer.join(", ") : (answer || <span style={{color:'#999', fontStyle:'italic'}}>No answer provided</span>)}
-                                    </div>
+                                    
+                                    {isEditing ? (
+                                        <input 
+                                            type="text" 
+                                            value={currentVal}
+                                            onChange={(e) => handleEditChange(q.id, e.target.value)}
+                                            style={{ width: '100%', padding: '8px', border: '1px solid #007bff', borderRadius: '4px', background: '#eef6ff' }}
+                                        />
+                                    ) : (
+                                        <div style={{ background: '#f9f9f9', padding: '10px', borderRadius: '4px', fontSize: '14px' }}>
+                                            {Array.isArray(currentVal) ? currentVal.join(", ") : (currentVal || <span style={{color:'#999', fontStyle:'italic'}}>No answer</span>)}
+                                        </div>
+                                    )}
                                 </div>
                             );
                         })}
 
-                        <button onClick={() => setSelectedSubmission(null)} style={{ marginTop: '20px', width: '100%', padding: '10px', background: '#6c757d', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Close</button>
+                        <div style={{ marginTop: '20px', display: 'flex', gap: '10px' }}>
+                            {isEditing ? (
+                                <button 
+                                    onClick={handleSaveChanges} 
+                                    style={{ flex: 1, padding: '12px', background: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                                >
+                                    Save as New Version
+                                </button>
+                            ) : (
+                                <button 
+                                    onClick={() => setSelectedSubmission(null)} 
+                                    style={{ flex: 1, padding: '12px', background: '#6c757d', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                                >
+                                    Close
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}

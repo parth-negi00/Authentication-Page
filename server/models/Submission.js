@@ -4,23 +4,41 @@ const SubmissionSchema = new mongoose.Schema({
   formId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Form",
-    required: true
+    required: true,
   },
-  // The User_ID of the person who filled it
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
-    required: true
+    required: true,
   },
-  // Organisation_ID (For easier filtering)
   organizationId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Organization",
-    required: true
+    type: String,
+    required: true,
   },
-  formName: { type: String },
-  data: { type: Object, required: true },
-  submittedAt: { type: Date, default: Date.now }
-});
+  formName: {
+    type: String,
+    required: true,
+  },
+  // The Current (Latest) Data
+  data: {
+    type: Object, 
+    required: true,
+  },
+  
+  // --- NEW: HISTORY ARRAY ---
+  // This stores the snapshots of previous versions
+  history: [{
+    editedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // Who made the edit (Iqra)
+    editedAt: { type: Date, default: Date.now },
+    versionLabel: { type: String }, // e.g. "Version 1"
+    previousData: { type: Object }  // The answers BEFORE the edit
+  }],
+  // --------------------------
+
+  submittedAt: {
+    type: Date,
+    default: Date.now,
+  },
+}, { minimize: false }); 
 
 module.exports = mongoose.model("Submission", SubmissionSchema);

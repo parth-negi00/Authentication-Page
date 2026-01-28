@@ -188,45 +188,52 @@ const Dashboard = () => {
                                 
                                 {/* ACTION BUTTONS */}
                                 <div style={{ display: 'flex', gap: '10px' }}>
-                                    {/* Everyone can Fill or View if visible */}
-                                    <button 
-                                        onClick={() => navigate('/preview', { state: form })} 
-                                        style={{ flex: 1, fontSize: '12px', padding: '8px', background: '#007bff', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}
-                                    >
-                                        Fill
-                                    </button>
-                                    <button 
-                                        onClick={() => navigate('/view', { state: form })} 
-                                        style={{ flex: 1, fontSize: '12px', padding: '8px', background: '#17a2b8', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}
-                                    >
-                                        View
-                                    </button>
+                                    {/* 1. Fill Button (Everyone) */}
+<button 
+    onClick={() => navigate('/preview', { state: form })} 
+    style={{ flex: 1, fontSize: '12px', padding: '8px', background: '#007bff', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}
+    title="Fill New Response"
+>
+    Fill
+</button>
 
-                                    {/* SECURITY: Only Admins see Delete, Responses, and Share */}
-                                    {user.privilege === 'admin' && (
-                                        <>
-                                            <button 
-                                                onClick={() => handleDeleteForm(form._id)} 
-                                                style={{ fontSize: '12px', padding: '8px 12px', background: '#dc3545', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}
-                                            >
-                                                🗑️
-                                            </button>
-                                            <button 
-                                                onClick={() => navigate('/responses', { state: form })} 
-                                                style={{ fontSize: '12px', padding: '8px 12px', background: '#ffc107', color: 'black', border: 'none', borderRadius: '3px', cursor: 'pointer', marginLeft: '5px' }}
-                                                title="View Responses"
-                                            >
-                                                📊
-                                            </button>
-                                            <button 
-                                                onClick={() => handleShare(form._id)} 
-                                                style={{ fontSize: '12px', padding: '8px 12px', background: '#28a745', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer', marginLeft: '5px' }}
-                                                title="Copy Link"
-                                            >
-                                                🔗
-                                            </button>
-                                        </>
-                                    )}
+{/* 2. View Button (Everyone - Read Only Template) */}
+<button 
+    onClick={() => navigate('/view', { state: form })} 
+    style={{ flex: 1, fontSize: '12px', padding: '8px', background: '#17a2b8', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}
+    title="View Form"
+>
+    View
+</button>
+
+{/* 3. NEW: History/Responses Button (Everyone) */}
+{/* Renamed to 'History' for Respondents, 'Responses' for Admin */}
+<button 
+    onClick={() => navigate('/responses', { state: form })} 
+    style={{ fontSize: '12px', padding: '8px 12px', background: '#6610f2', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer', marginLeft: '5px' }}
+    title={user.privilege === 'admin' ? "View All Responses" : "View My History"}
+>
+    {user.privilege === 'admin' ? "📊" : "📄"}
+</button>
+
+{/* 4. Admin Only Buttons */}
+{user.privilege === 'admin' && (
+    <>
+        <button 
+            onClick={() => handleDeleteForm(form._id)} 
+            style={{ fontSize: '12px', padding: '8px 12px', background: '#dc3545', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer', marginLeft: '5px' }}
+        >
+            🗑️
+        </button>
+        <button 
+            onClick={() => handleShare(form._id)} 
+            style={{ fontSize: '12px', padding: '8px 12px', background: '#28a745', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer', marginLeft: '5px' }}
+            title="Copy Link"
+        >
+            🔗
+        </button>
+    </>
+)}
                                 </div>
                             </div>
                         ))}
