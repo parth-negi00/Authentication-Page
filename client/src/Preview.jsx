@@ -1,150 +1,192 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 const BACKEND_URL = window.location.hostname === "localhost" 
   ? "http://localhost:5000" 
   : "https://authentication-page-backend.vercel.app";
 
-const Preview = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  
-  // Get data passed from Builder or Dashboard
-  const { id, items, name, description } = location.state || { id: null, items: [], name: "Form", description: "" };
-  
-  const [formData, setFormData] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+export default function Preview() {
+    const location = useLocation();
+    const navigate = useNavigate();
+    
+    // 1. Get the Form Data passed from Dashboard
+    const { _id, name, description, items } = location.state || {};
+    
+    // 2. State to store the User's Answers
+    const [answers, setAnswers] = useState({});
 
-  // Initialize formData if we are editing an existing form that already has values
-  useEffect(() => {
-    if (!items || items.length === 0) {
-      alert("No form data found. Redirecting to dashboard.");
-      navigate('/dashboard');
-    } else {
-        // Pre-fill answers if they exist in the saved items
-        const initialData = {};
-        items.forEach(item => {
-            if (item.value) initialData[item.id] = item.value;
-        });
-        setFormData(initialData);
+    if (!location.state) {
+        return <div style={{padding: '20px'}}>No form loaded. Go back to Dashboard.</div>;
     }
-  }, [items, navigate]);
 
-  const handleChange = (itemId, value) => {
-    setFormData(prev => ({ ...prev, [itemId]: value }));
-  };
+    // Handle Input Changes
+    const handleInputChange = (id, value) => {
+        setAnswers(prev => ({ ...prev, [id]: value }));
+    };
 
-  const handleSubmit = async () => {
-    setIsSubmitting(true);
+    const handleCheckboxChange = (id, option) => {
+        const currentParams = answers[id] || [];
+        if (currentParams.includes(option)) {
+            setAnswers(prev => ({ ...prev, [id]: currentParams.filter(i => i !== option) }));
+        } else {
+            setAnswers(prev => ({ ...prev, [id]: [...currentParams, option] }));
+        }
+    };
 
-    // --- MAGICAL STEP: MERGE ANSWERS INTO ITEMS ---
-    // We take the structure (item) and add the answer (value) to it.
-    const itemsWithAnswers = items.map(item => ({
-        ...item,
-        value: formData[item.id] || "" // <--- This saves what you typed!
-    }));
-
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${BACKEND_URL}/api/forms/submit`, {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}` 
-        },
-        body: JSON.stringify({
-          id: id, 
-          formName: name, 
-          description: description,
-          items: itemsWithAnswers // <--- Send the merged data
-        }),
-      });
-
-      if (response.ok) {
-        alert("Form & Answers Saved Successfully!");
-        navigate('/dashboard'); 
-      } else {
-        const errorData = await response.json();
-        alert(`Submission failed: ${errorData.message || "Unknown error"}`);
-      }
-    } catch (error) {
-      console.error("Submission Error:", error);
-      alert("Server error. Please try again later.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  return (
-    <div style={{ maxWidth: '600px', margin: '40px auto', padding: '30px', background: 'white', borderRadius: '8px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}>
-      
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', borderBottom: '2px solid #eee', paddingBottom: '10px' }}>
-        <div>
-            <h2 style={{ margin: 0 }}>{name} - Preview</h2>
-            <small style={{ color: '#666' }}>{description}</small>
-        </div>
-        <button 
-          onClick={() => navigate('/builder', { state: location.state })} 
-          style={{ background: '#6c757d', color: 'white', border: 'none', padding: '8px 15px', borderRadius: '4px', cursor: 'pointer', height: 'fit-content' }}
-        >
-          ← Edit Structure
-        </button>
-      </div>
-
-      {items.map((item) => {
-        if (item.type === 'section') {
-          return (
-            <div key={item.id} style={{ marginTop: '30px', marginBottom: '15px', borderBottom: '1px solid #ddd' }}>
-               <h3 style={{ color: '#333', margin: '0 0 5px 0' }}>{item.label}</h3>
-            </div>
-          );
+    // --- SUBMISSION LOGIC ---
+    const handleSubmit = async () => {
+        const token = localStorage.getItem("token");
+        
+        if (!token) {
+            alert("You must be logged in to submit.");
+            navigate("/login");
+            return;
         }
 
-        return (
-          <div key={item.id} style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#555' }}>
-              {item.label}
-            </label>
-            
-            {(() => {
-              const inputStyle = { width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box', fontSize: '14px' };
-              const val = formData[item.id] || ""; // Controlled input
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/submissions`, {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}` 
+                },
+                body: JSON.stringify({
+                    formId: _id,      
+                    formName: name,   
+                    data: answers     
+                })
+            });
 
-              switch(item.type) {
-                case 'paragraph': 
-                    return <textarea style={inputStyle} rows={4} value={val} onChange={(e) => handleChange(item.id, e.target.value)} />;
-                case 'select': 
+            if (res.ok) {
+                alert("Application Submitted Successfully!");
+                navigate("/dashboard");
+            } else {
+                const data = await res.json();
+                alert(data.message || "Submission failed");
+            }
+        } catch (err) {
+            console.error("Submission Error:", err);
+            alert("Server Error");
+        }
+    };
+
+    return (
+        <div style={{ maxWidth: '600px', margin: '40px auto', fontFamily: 'Arial, sans-serif' }}>
+            {/* Main Form Title */}
+            <div style={{ background: 'white', padding: '30px', borderRadius: '8px', borderTop: '8px solid #673ab7', boxShadow: '0 2px 5px rgba(0,0,0,0.1)', marginBottom: '20px' }}>
+                <h1 style={{ margin: '0 0 10px 0', fontSize: '32px' }}>{name}</h1>
+                <p style={{ color: '#666', fontSize: '14px' }}>{description}</p>
+            </div>
+
+            {/* Questions Loop */}
+            {items.map((q) => {
+                // --- FIX: Check if this item is a "Section" ---
+                if (q.type === 'section') {
                     return (
-                        <select style={inputStyle} value={val} onChange={(e) => handleChange(item.id, e.target.value)}>
-                            <option value="">Select...</option>
-                            <option value="Option 1">Option 1</option>
-                            <option value="Option 2">Option 2</option>
-                        </select>
+                        <div key={q.id} style={{ marginTop: '30px', marginBottom: '15px', borderBottom: '2px solid #673ab7', paddingBottom: '5px' }}>
+                            <h2 style={{ fontSize: '24px', color: '#673ab7', margin: 0 }}>{q.label}</h2>
+                        </div>
                     );
-                case 'checkbox': 
-                    return <input type="checkbox" checked={!!val} style={{width:'20px', height:'20px'}} onChange={(e) => handleChange(item.id, e.target.checked)} />;
-                case 'date': 
-                    return <input type="date" style={inputStyle} value={val} onChange={(e) => handleChange(item.id, e.target.value)} />;
-                case 'file': 
-                    // Files are tricky. For now, we just let them select it, but we can't easily "preview" the value of a file input for security reasons.
-                    return <input type="file" style={inputStyle} onChange={(e) => handleChange(item.id, e.target.value)} />;
-                default: 
-                    return <input type={item.type} style={inputStyle} value={val} onChange={(e) => handleChange(item.id, e.target.value)} />;
-              }
-            })()}
-          </div>
-        );
-      })}
+                }
 
-      <button 
-        onClick={handleSubmit} 
-        disabled={isSubmitting}
-        style={{ width: '100%', padding: '12px', backgroundColor: isSubmitting ? '#ccc' : '#28a745', color: 'white', border: 'none', borderRadius: '5px', fontSize: '16px', fontWeight: 'bold', cursor: isSubmitting ? 'not-allowed' : 'pointer', marginTop: '20px' }}
-      >
-        {isSubmitting ? "Saving..." : "Save Application Data"}
-      </button>
-    </div>
-  );
-};
+                // If NOT a section, render the standard Question Card
+                return (
+                    <div key={q.id} style={{ background: 'white', padding: '25px', borderRadius: '8px', border: '1px solid #ddd', marginBottom: '15px' }}>
+                        <label style={{ display: 'block', fontSize: '16px', marginBottom: '15px', fontWeight: 'bold' }}>
+                            {q.label}
+                        </label>
 
-export default Preview;
+                        {/* Render Input based on Type */}
+                        <div>
+                            {(() => {
+                                const inputStyle = { width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box' };
+                                
+                                switch(q.type) {
+                                    case 'paragraph': 
+                                        return <textarea 
+                                            rows={4} 
+                                            style={inputStyle} 
+                                            placeholder="Your answer"
+                                            onChange={(e) => handleInputChange(q.id, e.target.value)}
+                                        />;
+                                    
+                                    case 'select': 
+                                        return (
+                                            <select style={inputStyle} onChange={(e) => handleInputChange(q.id, e.target.value)}>
+                                                <option value="">Select an option</option>
+                                                {q.options && q.options.map((opt, i) => (
+                                                    <option key={i} value={opt}>{opt}</option>
+                                                ))}
+                                            </select>
+                                        );
+                                    
+                                    case 'radio':
+                                        return (
+                                            <div>
+                                                {q.options && q.options.map((opt, i) => (
+                                                    <div key={i} style={{ marginBottom: '8px' }}>
+                                                        <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                                                            <input 
+                                                                type="radio" 
+                                                                name={q.id} 
+                                                                value={opt} 
+                                                                onChange={(e) => handleInputChange(q.id, e.target.value)}
+                                                                style={{ marginRight: '10px' }}
+                                                            />
+                                                            {opt}
+                                                        </label>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        );
+
+                                    case 'checkbox':
+                                        return (
+                                            <div>
+                                                {q.options && q.options.map((opt, i) => (
+                                                    <div key={i} style={{ marginBottom: '8px' }}>
+                                                        <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                                                            <input 
+                                                                type="checkbox" 
+                                                                value={opt} 
+                                                                onChange={() => handleCheckboxChange(q.id, opt)}
+                                                                style={{ marginRight: '10px' }}
+                                                            />
+                                                            {opt}
+                                                        </label>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        );
+
+                                    default: // text, email, number, etc.
+                                        return <input 
+                                            type={q.type} 
+                                            style={inputStyle} 
+                                            placeholder="Your answer"
+                                            onChange={(e) => handleInputChange(q.id, e.target.value)}
+                                        />;
+                                }
+                            })()}
+                        </div>
+                    </div>
+                );
+            })}
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
+                <button 
+                    onClick={() => navigate('/dashboard')} 
+                    style={{ padding: '10px 20px', background: 'transparent', color: '#666', border: 'none', cursor: 'pointer' }}
+                >
+                    Cancel
+                </button>
+                <button 
+                    onClick={handleSubmit} 
+                    style={{ padding: '12px 30px', background: '#673ab7', color: 'white', border: 'none', borderRadius: '4px', fontSize: '16px', cursor: 'pointer' }}
+                >
+                    Submit Application
+                </button>
+            </div>
+        </div>
+    );
+}

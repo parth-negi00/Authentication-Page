@@ -12,7 +12,7 @@ import View from './View';
 // --- Security Guard ---
 const PrivateRoute = ({ children }) => {
   const token = localStorage.getItem("token");
-  return token ? children : <Navigate to="/" />;
+  return token ? children : <Navigate to="/login" />; // Redirect to /login if no token
 };
 
 // --- Login Redirect ---
@@ -25,14 +25,16 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public Auth */}
+        {/* Public Auth - We add aliases for login/signup so links work */}
         <Route path="/" element={<PublicRoute><Signup /></PublicRoute>} />
+        <Route path="/login" element={<PublicRoute><Signup /></PublicRoute>} />
+        <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
 
         {/* Dashboard (The Table View) */}
         <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
 
-        {/* Builder (The Editor) */}
-        <Route path="/builder" element={<PrivateRoute><FormBuilder /></PrivateRoute>} />
+        {/* Builder (The Editor) - FIXED ROUTE NAME */}
+        <Route path="/form-builder" element={<PrivateRoute><FormBuilder /></PrivateRoute>} />
 
         {/* Preview (The Live Form) */}
         <Route path="/preview" element={<PrivateRoute><Preview /></PrivateRoute>} />

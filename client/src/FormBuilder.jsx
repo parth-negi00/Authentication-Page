@@ -12,6 +12,11 @@ import {
   useDroppable
 } from '@dnd-kit/core';
 
+// Define Backend URL
+const BACKEND_URL = window.location.hostname === "localhost" 
+  ? "http://localhost:5000" 
+  : "https://authentication-page-backend.vercel.app";
+
 // --- Sidebar Item ---
 const SidebarItem = ({ type, label }) => {
   const { attributes, listeners, setNodeRef } = useDraggable({
@@ -40,17 +45,20 @@ export default function FormBuilder() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Get metadata passed from Dashboard (Card info or existing form info)
-  // FIX: We specifically look for _id here
-  const { _id, name, description, items: existingItems, isNew } = location.state || { 
-    name: "New Form", 
+  // Get metadata passed from Dashboard
+  const { _id, name: initialName, description: initialDesc, items: existingItems, isNew } = location.state || { 
+    name: "Untitled Form", 
     description: "", 
     items: [], 
     isNew: true 
   };
 
-  const [items, setItems] = useState(isNew ? [] : existingItems);
+  const [items, setItems] = useState(existingItems || []);
   const [activeItem, setActiveItem] = useState(null);
+  
+  // State for Form Name & Description (Editable)
+  const [formName, setFormName] = useState(initialName);
+  const [description, setDescription] = useState(initialDesc);
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
@@ -67,7 +75,8 @@ export default function FormBuilder() {
       setItems((prev) => [...prev, { 
         id: Date.now().toString(), 
         label: type === 'section' ? 'New Section Header' : active.data.current.label, 
-        type: type 
+        type: type,
+        options: (type === 'select' || type === 'checkbox' || type === 'radio') ? ["Option 1", "Option 2"] : [] // Add default options for choice types
       }]);
     }
   };
@@ -82,19 +91,45 @@ export default function FormBuilder() {
     setItems((prev) => prev.map(item => item.id === id ? { ...item, label: newLabel } : item));
   };
 
-  // --- UPDATED SAVE FUNCTION ---
-  const handleSaveForm = () => {
-    if (items.length === 0) return alert("Canvas is empty.");
+  // --- NEW: SAVE TO DATABASE FUNCTION ---
+  const handlePublish = async () => {
+    if (items.length === 0) return alert("Canvas is empty. Add at least one question.");
     
-    navigate('/preview', { 
-      state: { 
-        // FIX: Pass the ID if we are editing an old form. If New, pass null.
-        id: isNew ? null : _id,
-        items, 
-        name, 
-        description 
-      } 
-    }); 
+    const token = localStorage.getItem("token");
+    if (!token) {
+        alert("You are not logged in!");
+        navigate("/login");
+        return;
+    }
+
+    try {
+        const payload = {
+            id: isNew ? null : _id, // If editing, send ID. If new, send null.
+            formName: formName,     // Use the state variable
+            description: description,
+            items: items
+        };
+
+        const res = await fetch(`${BACKEND_URL}/api/forms/submit`, {
+            method: "POST",
+            headers: { 
+                "Content-Type": "application/json", 
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+            alert("Form Published Successfully!");
+            navigate("/dashboard"); // Go back to dashboard on success
+        } else {
+            const data = await res.json();
+            alert(data.message || "Failed to publish form");
+        }
+    } catch (err) {
+        console.error("Publish Error:", err);
+        alert("Server Error. Check console.");
+    }
   };
 
   const handleDiscard = () => {
@@ -107,12 +142,24 @@ export default function FormBuilder() {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
       {/* Builder Header */}
       <div style={{ padding: '15px 20px', backgroundColor: '#333', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <h2 style={{ margin: 0 }}>{name}</h2>
-            <small style={{ color: '#aaa' }}>{description}</small>
+          <div style={{ flex: 1 }}>
+            {/* Editable Title */}
+            <input 
+                value={formName} 
+                onChange={(e) => setFormName(e.target.value)}
+                style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '20px', fontWeight: 'bold', width: '100%', outline: 'none' }}
+                placeholder="Form Title"
+            />
+            {/* Editable Description */}
+            <input 
+                value={description} 
+                onChange={(e) => setDescription(e.target.value)}
+                style={{ background: 'transparent', border: 'none', color: '#ccc', fontSize: '14px', width: '100%', outline: 'none' }}
+                placeholder="Form Description"
+            />
           </div>
           <div>
-            <button onClick={handleSaveForm} style={{ padding: '10px 20px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>Publish Form</button>
+            <button onClick={handlePublish} style={{ padding: '10px 20px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>Publish Form</button>
             <button onClick={handleDiscard} style={{ padding: '10px 20px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', marginLeft: '10px' }}>Discard</button>
           </div>
       </div>

@@ -14,7 +14,7 @@ const Dashboard = () => {
     const [forms, setForms] = useState([]);
     const [users, setUsers] = useState([]);
     
-    // Search States (Keep these to filter the list)
+    // Search States
     const [searchId, setSearchId] = useState("");
     const [searchOrgId, setSearchOrgId] = useState("");
 
@@ -58,6 +58,32 @@ const Dashboard = () => {
         } catch (err) { console.error("Error fetching users", err); }
     };
 
+    // --- NEW DELETE FUNCTION ---
+    const handleDeleteForm = async (formId) => {
+        if (!window.confirm("Are you sure you want to delete this form? This cannot be undone.")) {
+            return;
+        }
+
+        const token = localStorage.getItem("token");
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/forms/${formId}`, {
+                method: "DELETE",
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+
+            if (res.ok) {
+                // Remove from UI immediately
+                setForms(forms.filter(f => f._id !== formId));
+                alert("Form deleted successfully.");
+            } else {
+                alert("Failed to delete form.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Server Error");
+        }
+    };
+
     const handleCreateUser = async (e) => {
         e.preventDefault();
         const token = localStorage.getItem("token");
@@ -91,15 +117,21 @@ const Dashboard = () => {
     };
 
     const handleCreateForm = () => {
-        navigate("/FormBuilder.jsx"); 
+        // Navigate to the correct route with initial state
+        navigate("/form-builder", { 
+            state: { 
+                isNew: true, 
+                name: "Untitled Form", 
+                description: "Add a description", 
+                items: [] 
+            } 
+        }); 
     };
 
     // --- SEARCH FILTER LOGIC ---
-    // We filter based on IDs, even though we don't show them in the table
     const filteredUsers = users.filter(u => {
         const matchId = searchId ? u._id.toLowerCase().includes(searchId.toLowerCase()) : true;
         const matchOrg = searchOrgId ? (u.organizationId || "").toLowerCase().includes(searchOrgId.toLowerCase()) : true;
-        
         return matchId && matchOrg;
     });
 
@@ -148,13 +180,37 @@ const Dashboard = () => {
                         <h3>Your Forms</h3>
                         <button onClick={handleCreateForm} style={{ padding: '10px 15px', background: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>+ Create New Form</button>
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '20px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
                         {forms.map(form => (
                             <div key={form._id} style={{ border: '1px solid #ddd', padding: '15px', borderRadius: '8px', background: 'white', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
                                 <h4 style={{ margin: '0 0 10px 0' }}>{form.name}</h4>
-                                <p style={{ color: '#666', fontSize: '13px' }}>{form.description || "No description"}</p>
-                                <div style={{ marginTop: '15px' }}>
-                                    <button onClick={() => navigate('/preview', { state: form })} style={{ fontSize: '12px', padding: '5px 10px', background: '#17a2b8', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}>View/Fill</button>
+                                <p style={{ color: '#666', fontSize: '13px', marginBottom: '15px' }}>{form.description || "No description"}</p>
+                                
+                                {/* ACTION BUTTONS */}
+                                <div style={{ display: 'flex', gap: '10px' }}>
+                                    {/* 1. Fill Button -> Preview.jsx */}
+                                    <button 
+                                        onClick={() => navigate('/preview', { state: form })} 
+                                        style={{ flex: 1, fontSize: '12px', padding: '8px', background: '#007bff', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}
+                                    >
+                                        Fill Form
+                                    </button>
+
+                                    {/* 2. View Button -> View.jsx */}
+                                    <button 
+                                        onClick={() => navigate('/view', { state: form })} 
+                                        style={{ flex: 1, fontSize: '12px', padding: '8px', background: '#17a2b8', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}
+                                    >
+                                        View
+                                    </button>
+
+                                    {/* 3. Delete Button */}
+                                    <button 
+                                        onClick={() => handleDeleteForm(form._id)} 
+                                        style={{ fontSize: '12px', padding: '8px 12px', background: '#dc3545', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}
+                                    >
+                                        🗑️
+                                    </button>
                                 </div>
                             </div>
                         ))}
@@ -169,8 +225,6 @@ const Dashboard = () => {
                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
                         <div>
                             <h3>Organization Users</h3>
-                            
-                            {/* SEARCH INPUTS (Preserved) */}
                             <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
                                 <input 
                                     type="text" 
@@ -194,7 +248,6 @@ const Dashboard = () => {
                         </button>
                     </div>
 
-                    {/* ADD USER FORM */}
                     {isCreatingUser && (
                         <div style={{ background: '#f9f9f9', padding: '20px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #ddd' }}>
                             <h4>Add New Respondent</h4>
@@ -208,7 +261,6 @@ const Dashboard = () => {
                         </div>
                     )}
 
-                    {/* USERS TABLE (Reverted Columns) */}
                     <table style={{ width: '100%', borderCollapse: 'collapse', background: 'white' }}>
                         <thead>
                             <tr style={{ background: '#f8f9fa', textAlign: 'left' }}>

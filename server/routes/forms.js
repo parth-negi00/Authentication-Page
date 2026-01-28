@@ -1,12 +1,12 @@
 const express = require("express");
 const router = express.Router(); 
 const Form = require("../models/Form");
-const auth = require("../middleware/authMiddleware"); // USE THE REAL MIDDLEWARE
+const Submission = require("../models/Submission"); // <--- IMPORT THIS!
+const auth = require("../middleware/authMiddleware");
 
 // --- GET ROUTE: Fetch all forms for the Organization ---
 router.get("/", auth, async (req, res) => {
   try {
-    // UPDATED: Filter by Organization, not just User ID
     const forms = await Form.find({ organizationId: req.user.organizationId }).sort({ lastUpdated: -1 });
     res.json(forms);
   } catch (err) {
@@ -22,7 +22,6 @@ router.post("/submit", auth, async (req, res) => {
 
     // A. UPDATE EXISTING FORM
     if (id) {
-        // Ensure user owns the form OR belongs to same org
         let form = await Form.findOne({ _id: id, organizationId: req.user.organizationId });
 
         if (!form) {
@@ -39,9 +38,8 @@ router.post("/submit", auth, async (req, res) => {
     }
 
     // B. CREATE NEW FORM
-    // UPDATED: We must save organizationId now!
     const newForm = new Form({
-      organizationId: req.user.organizationId, // <--- CRITICAL NEW FIELD
+      organizationId: req.user.organizationId,
       createdBy: req.user.id,
       name: formName || "Untitled Form",
       description: description || "",
@@ -58,19 +56,26 @@ router.post("/submit", auth, async (req, res) => {
   }
 });
 
-// --- DELETE ROUTE ---
+// --- DELETE ROUTE (The Fix) ---
 router.delete("/:id", auth, async (req, res) => {
   try {
-    const form = await Form.findOneAndDelete({ 
+    // 1. Find the form first to ensure it exists and belongs to this Org
+    const form = await Form.findOne({ 
       _id: req.params.id, 
-      organizationId: req.user.organizationId // Security check
+      organizationId: req.user.organizationId 
     });
 
     if (!form) {
       return res.status(404).json({ message: "Form not found or unauthorized" });
     }
 
-    res.json({ message: "Form deleted successfully" });
+    // 2. CASCADE DELETE: Delete all submissions linked to this form
+    await Submission.deleteMany({ formId: req.params.id });
+
+    // 3. Now delete the form itself
+    await Form.findByIdAndDelete(req.params.id);
+
+    res.json({ message: "Form and all associated data deleted successfully" });
   } catch (err) {
     console.error("Delete Error:", err.message);
     res.status(500).send("Server Error");
